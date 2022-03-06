@@ -5,6 +5,224 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [vNext]
+- Added GitHub Actions support for submodules and fetch-depth
+- Added AppVeyor support for submodules
+
+## [6.0.1] / 2022-01-10
+- Fixed invisible output for `SystemConsoleHostTheme`
+- Fixed `GetRelativePath` for same parts in different places
+
+## [6.0.0] / 2022-01-07
+- Removed `ToolSettings.ProcessLogFile` and `ProcessLogTimestamp`
+- Removed `GitHub` prefix for `GitHubActions` environment variables
+- Deprecated `Logger` in favor of `Serilog.Log`
+- Deprecated `ControlFlow` asserts in favor of `Assert` class
+- Changed `Nuke.GlobalTool` to enable `RollForward` with `LatestMajor`
+- Changed default serialization settings for JSON and YAML in `SerializationTasks`
+- Changed GitHub Actions generation to use default `GitHubActions.Token` through `EnableGitHubContext`
+- Changed Azure Pipelines generation to use default `AzurePipelines.AccessToken` through `EnableAccessToken`
+- Added shell-completion support for global tool builds
+- Added `NukeBuild.ExecutionPlan` to public API
+- Added `Partition.Part` and `Total` to public API
+- Added `MSBuildToolPathResolver` support for Visual Studio 2022
+- Added `XmlTasks` variants for `string` objects
+- Added `AbsolutePath.Name` and `NameWithoutExtension` properties
+- Added `AbsolutePath.Exists`, `FileExists`, and `DirectoryExists` extension methods
+- Added `Project.HasPackageReference` and `GetPackageReferenceVersion`
+- Added `UpdateFile` variants in `SerializationTasks`
+- Added `StdToText` and `StdToJson` extension methods for `IEnumerable<Output>`
+- Added newest worker images for Azure Pipelines, GitHub Actions, and AppVeyor generation
+- Added Azure Pipelines generation for pull-request triggers, fetch depth, and clean checkout
+- Added Space Automation support for secrets
+- Added TeamCity support for GUID tokens
+- Added `AzurePipelinesCachePaths` for common cache paths
+- Added `AzurePipelines.PhaseName` property
+- Added `GitHub.CreateComment` for issue and pull-request comments
+- Added `TeamCity.AuthUserId` and `AuthPassword` properties
+- Added `AppVeyorSecretAttribute` for generation of secret value entries
+- Added `HttpClient`, `HttpRequest`, and `HttpResponse` extensions
+- Added `XNode` extensions
+- Added `LatestMavenVersionAttribute`
+- Added `MauiCheckTasks`
+- Added `MinVerTasks` and `MinVerAttribute`
+- Added `PowerShellTasks`
+- Added `BootsTasks`
+- Added `NetlifyTasks`
+- Fixed check for executables compiled with `PublishSingleFile`
+- Fixed `MSBuild` localization using `MSBuildLocator`
+- Fixed missing assertion for successful status code in `HttpTasks`
+- Fixed Azure Pipelines caching
+- Fixed `IBuildServer.Branch` for `AzurePipelines`
+- Fixed `OctoVersionTasks` and `OctoVersionAttribute` for latest version
+- Fixed `AzureSignToolTasks` to invoke `sign` command
+- Fixed missing `Files` property in `AzureSignTool`
+- Fixed missing `Blame*` properties in `DotNetTasks`
+- Fixed property types in `ILRepackTasks`
+- Fixed `UnityTasks` to auto-detect version
+- Fixed quoting for `UnityTasks.LogFile`
+
+## [5.3.0] / 2021-08-04
+- Added LFS and Submodule settings in AzurePipelines configuration
+- Added `OctoVersionTasks` and `OctoVersionAttribute`
+- Added `AzureSignToolTasks`
+- Added `ChocolateyTasks`
+- Fixed invocations for PowerShell bootstrapping script
+- Fixed retrieval of `version_dotnet_sdk` in telemetry
+- Fixed solution serialization to show information about duplicated entries
+- Fixed path construction to be lazy for in-memory solutions that get saved
+- Fixed `GitHubTasks.GetGitHubBrowseUrl` to trim trailing slash
+- Fixed `GitVersionAttribute.Framework` default value to `net5.0`
+- Fixed URLs in `ChangeLogTasks`
+- Fixed `DotNetTestSettings.Loggers` property to accept multiple values
+- Fixed default value emission for `DotCoverTasks`
+- Fixed missing properties for `GitVersionTasks`
+- Fixed missing secret attributes in `SonarScannerTasks`
+- Fixed `NerdbankGitVersioningFormat` enumeration to use lower-case
+
+## [5.2.1] / 2021-06-18
+- Fixed telemetry
+- Fixed humanized string concatenation
+
+## [5.2.0] / 2021-06-18
+- Added telemetry data collection
+- Added unified `NukeBuild.Partition` property
+- Added `Rider`, `VisualStudio`, `VSCode` as `Host` implementations
+- Added `GitRepository.IsOnMainBranch` and `IsOnMainOrMasterBranch`
+- Added `AbsolutePath` equality operators
+- Fixed SpaceAutomation to generate default `refSpec`
+- Changed `Microsoft.CodeAnalysis.CSharp` package version to `3.9.0`
+- Removed `Refit` reference and `ITeamCityRestClient` interface
+- Removed `Colorful.Console` reference and embedded figlet fonts
+
+## [5.1.4] / 2021-06-01
+- Fixed `StronglyTypedSolutionGenerator` to resolve root directory only on demand
+- Fixed `JetBrains.Annotations` to be packed with source generators
+- Fixed missing SpaceAutomation configuration link
+
+## [5.1.3] / 2021-05-31
+- Fixed filtering explicitly overridden targets in build components
+
+## [5.1.2] / 2021-05-18
+- Fixed target duration to be measured immediately after execution
+- Fixed build script invocation from global tool
+- Fixed `AddPackage` command to allow explicit version parameter
+- Fixed navigation methods to not be included in command list
+- Fixed `StronglyTypedSolutionGenerator` to resolve root directory only on demand
+- Fixed `EnvironmentInfo.Framework` to use entry assembly
+- Fixed parsing of `GitRepository` remote
+- Fixed missing pull-request properties in TeamCity
+- Fixed `RunNumber` and `RunId` in `GitHubActions` to be of type `long`
+- Fixed `GitVersionAttribute` to automatically populate `Git_Branch` on TeamCity
+
+## [5.1.1] / 2021-04-23
+- Fixed parameter loading with missing default parameters file
+- Fixed visibility of `Directory.Build` files
+- Fixed `ArgumentsFromCommitMessageAttribute` to require manual application
+- Fixed summary reporting for exceptions to only include first line of message
+- Fixed update notification
+- Fixed PowerShell invocation from `build.cmd`
+- Fixed `Update` and `Setup` command to not stage parameters file
+- Fixed `Update` command for absent bootstrapping scripts
+- Fixed skipping unhandled syntax fragments in Cake conversion
+- Fixed missing `Instance` properties for `IBuildServer` implementations
+- Fixed GitHubActions default cache path
+- Fixed missing property for GitHubActions workflow inputs
+- Fixed quoting in GitHubActions for included/excluded paths
+- Fixed `XmlPoke` to allow specifying encoding
+- Fixed `ExternalFilesTask` for single file browse-URL
+- Fixed `ICompile`, `IPack`, `ITest` components to check against `SucceededTargets`
+- Fixed setting `RepositoryUrl` in `IPack` component
+
+## [5.1.0] / 2021-04-07
+- Removed `:Fix` command from global tool (superseded by `:AddPackage`)
+- Changed `.nuke` configuration file to `.nuke` directory
+- Changed shell-completion to rely on `build.schema.json` file
+- Changed default `DependencyBehavior` to `Skip`
+- Changed `HostType` to `Host` base class
+- Changed `ExecutionStatus` members `Executed` to `Succeeded`, and `Executing` to `Running`
+- Changed `IBuildExtension` instances to be cached
+- Changed `IOnBeforeLogo` and `IOnAfterLogo` extensions to `IOnBuildCreated` and `IOnBuildInitialized`
+- Changed `IsSuccessful` to check for succeeded, skipped and collective targets
+- Changed `ParameterAttribute` to allow external value providers with `ValueProviderType` and `ValueProviderMember`
+- Changed GitHubActions secret names to split on camel-humps
+- Added support for parameter files (profiles)
+- Added source generator for strong-typed solutions
+- Added shorthand dependencies for build components
+- Added `ReportSummary` for summary extension to `NukeBuild` and `INukeBuild`
+- Added exception reporting in summary
+- Added `ParameterPrefixAttribute` for build components
+- Added build extensions for `OnTargetSkipped`, `OnTargetRunning`, `OnTargetSucceeded`, and `OnTargetFailed`
+- Added styling for unlisted targets in execution plan HTML
+- Added `:Secrets` command to global tool and `SecretAttribute` for encryption in parameters files
+- Added `:AddPackage` command to global tool
+- Added `:GetConfiguration` command to global tool
+- Added `:Update` command to global tool
+- Added `:CakeConvert` and `:CakeClean` commands to global tool
+- Added generation of `Directory.Build.props` and `Directory.Build.targets` files
+- Added parameter resolution for root directory in global tool
+- Added shell-navigation aliases `nuke/` and `nuke-`
+- Added `ScheduledTargets`, `RunningTargets`, `AbortedTargets`, `FailedTargets`, `SucceededTargets` collections to `NukeBuild` and `INukeBuild`
+- Added `ArgumentsFromCommitMessageAttribute` and `:Trigger` command to global tool
+- Added `ExitCode` to `INukeBuild`
+- Added `IsFinished` and `IsFailing` to `NukeBuild` and `INukeBuild`
+- Added caching for `ValueInjectionUtility.TryGetValue`
+- Added equality operators and implicit conversion to string for Enumeration
+- Added `GetProject`, `GetSolutionFolder`, `Projects`, and `SolutionFolders` to `SolutionFolder`
+- Added `GetRuntimeIdentifers` to `ProjectExtensions`
+- Added string-escape extension for MSBuild in `DotNetTasks` and `MSBuildTasks`
+- Added `EnsureExistingDirectory` and `EnsureExistingParentDirectory` overloads for `AbsolutePath`
+- Added `XmlPeekElements` to `XmlTasks`
+- Added `GitRepository` properties `RemoteName` and `RemoteBranch`
+- Added support for `NerdbankGitVersioning`
+- Added `NoCache` property to `GitVersionAttribute` with default value `true`
+- Added `SendOrUpdateSlackMessage` to `SlackTasks`
+- Added support for JetBrains SpaceAutomation
+- Added support for GitHub Actions dispatch workflows
+- Added support for GitLab CI
+- Added support for multiple AppVeyor configurations
+- Added support for AppVeyor secrets
+- Added support for platform-independent TeamCity configurations
+- Added TeamCity parameter to replace run-button caption
+- Added `AddTeamCityLogger` for `DotNetTest` task
+- Added `IsPersonalBuild` property to `TeamCity`
+- Added caching for `AzurePipelinesAttribute` and `GitHubActionsAttribute`
+- Added `SetVariable` to `AzurePipelines`
+- Added `CodeMetricsTasks`
+- Added `PulumiTasks`
+- Added `CodecovTasks`
+- Added `CorFlagsTasks`
+- Added `FixieTasks`
+- Added `ILRepackTasks`
+- Fixed skip reason for targets skipped from `--skip` parameter
+- Fixed execution plan legend
+- Fixed execution plan highlighting for multiple default targets
+- Fixed `ConsoleUtility` to allow full deletion of secret
+- Fixed exception reporting for `ExecutableTargetFactory`
+- Fixed handling of value types in `ValueInjectionUtility.TryGetValue`
+- Fixed calculation of value sets for collection parameters
+- Fixed compilation of legacy template
+- Fixed `IsDescendantPath` to split path parts
+- Fixed `MoveDirectory` with additional `deleteRemainingFiles` parameter
+- Fixed `SwitchWorkingDirectory` to respect `allowCreate` parameter
+- Fixed `ResponseArchive` in `ISignPackages` build component
+- Fixed MSBuild path resolution to fallback to using `dotnet --list-sdks`
+- Fixed client usage in `GitHubTasks`
+- Fixed token ordering in `TemplateUtility`
+- Fixed default value for collections in TeamCity configurations
+- Fixed TeamCity composite configurations to propagate failures
+- Fixed `TeamCity` and `AzurePipelines` to update build numbers in environment variables
+- Fixed `TriggerBatch` in AzurePipelines generation
+- Fixed condition in AppVeyor generation
+- Fixed `FileFilters` property in `ReportGeneratorTasks`
+- Fixed logger for `DocFXTasks`
+- Fixed `Severity` property in `ReSharperTasks`
+- Fixed missing `MSBuild` and `ToolRestore` task in `DotNetTasks`
+- Fixed missing `Buildx` task in `DockerTasks`
+- Fixed missing `CoverDotNet` task in `DotCoverTasks`
+- Fixed missing `GenericCoveragePaths` property in `SonarScannerTasks`
+- Fixed missing properties in `ReSharperTasks`
+- Fixed missing properties in `TeamCity`, `GitHubActions`, and `AzurePipelines`
+- Fixed missing `SignToolDigestAlgorithm` enumeration in `SignToolTasks`
 
 ## [5.0.2] / 2020-12-07
 - Fixed `ChangelogTasks` to use HTTPS links in history
@@ -665,80 +883,90 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added CLT tasks for Git
 - Fixed background color in console output
 
-[vNext]: https://github.com/nuke-build/nuke.git/compare/5.0.2...HEAD
-[5.0.2]: https://github.com/nuke-build/nuke.git/compare/5.0.1...5.0.2
-[5.0.1]: https://github.com/nuke-build/nuke.git/compare/5.0.0...5.0.1
-[5.0.0]: https://github.com/nuke-build/nuke.git/compare/0.25.0...5.0.0
-[0.25.0]: https://github.com/nuke-build/nuke.git/compare/0.24.11...0.25.0
-[0.24.11]: https://github.com/nuke-build/nuke.git/compare/0.24.10...0.24.11
-[0.24.10]: https://github.com/nuke-build/nuke.git/compare/0.24.9...0.24.10
-[0.24.9]: https://github.com/nuke-build/nuke.git/compare/0.24.8...0.24.9
-[0.24.8]: https://github.com/nuke-build/nuke.git/compare/0.24.7...0.24.8
-[0.24.7]: https://github.com/nuke-build/nuke.git/compare/0.24.6...0.24.7
-[0.24.6]: https://github.com/nuke-build/nuke.git/compare/0.24.5...0.24.6
-[0.24.5]: https://github.com/nuke-build/nuke.git/compare/0.24.4...0.24.5
-[0.24.4]: https://github.com/nuke-build/nuke.git/compare/0.24.2...0.24.4
-[0.24.2]: https://github.com/nuke-build/nuke.git/compare/0.24.1...0.24.2
-[0.24.1]: https://github.com/nuke-build/nuke.git/compare/0.24.0...0.24.1
-[0.24.0]: https://github.com/nuke-build/nuke.git/compare/0.23.7...0.24.0
-[0.23.7]: https://github.com/nuke-build/nuke.git/compare/0.23.6...0.23.7
-[0.23.6]: https://github.com/nuke-build/nuke.git/compare/0.23.5...0.23.6
-[0.23.5]: https://github.com/nuke-build/nuke.git/compare/0.23.4...0.23.5
-[0.23.4]: https://github.com/nuke-build/nuke.git/compare/0.23.3...0.23.4
-[0.23.3]: https://github.com/nuke-build/nuke.git/compare/0.23.2...0.23.3
-[0.23.2]: https://github.com/nuke-build/nuke.git/compare/0.23.1...0.23.2
-[0.23.1]: https://github.com/nuke-build/nuke.git/compare/0.23.0...0.23.1
-[0.23.0]: https://github.com/nuke-build/nuke.git/compare/0.22.2...0.23.0
-[0.22.2]: https://github.com/nuke-build/nuke.git/compare/0.22.1...0.22.2
-[0.22.1]: https://github.com/nuke-build/nuke.git/compare/0.22.0...0.22.1
-[0.22.0]: https://github.com/nuke-build/nuke.git/compare/0.21.2...0.22.0
-[0.21.2]: https://github.com/nuke-build/nuke.git/compare/0.21.1...0.21.2
-[0.21.1]: https://github.com/nuke-build/nuke.git/compare/0.21.0...0.21.1
-[0.21.0]: https://github.com/nuke-build/nuke.git/compare/0.20.1...0.21.0
-[0.20.1]: https://github.com/nuke-build/nuke.git/compare/0.20.0...0.20.1
-[0.20.0]: https://github.com/nuke-build/nuke.git/compare/0.19.2...0.20.0
-[0.19.2]: https://github.com/nuke-build/nuke.git/compare/0.19.1...0.19.2
-[0.19.1]: https://github.com/nuke-build/nuke.git/compare/0.19.0...0.19.1
-[0.19.0]: https://github.com/nuke-build/nuke.git/compare/0.18.0...0.19.0
-[0.18.0]: https://github.com/nuke-build/nuke.git/compare/0.17.7...0.18.0
-[0.17.7]: https://github.com/nuke-build/nuke.git/compare/0.17.6...0.17.7
-[0.17.6]: https://github.com/nuke-build/nuke.git/compare/0.17.5...0.17.6
-[0.17.5]: https://github.com/nuke-build/nuke.git/compare/0.17.4...0.17.5
-[0.17.4]: https://github.com/nuke-build/nuke.git/compare/0.17.3...0.17.4
-[0.17.3]: https://github.com/nuke-build/nuke.git/compare/0.17.2...0.17.3
-[0.17.2]: https://github.com/nuke-build/nuke.git/compare/0.17.1...0.17.2
-[0.17.1]: https://github.com/nuke-build/nuke.git/compare/0.17.0...0.17.1
-[0.17.0]: https://github.com/nuke-build/nuke.git/compare/0.16.0...0.17.0
-[0.16.0]: https://github.com/nuke-build/nuke.git/compare/0.15.0...0.16.0
-[0.15.0]: https://github.com/nuke-build/nuke.git/compare/0.14.1...0.15.0
-[0.14.1]: https://github.com/nuke-build/nuke.git/compare/0.14.0...0.14.1
-[0.14.0]: https://github.com/nuke-build/nuke.git/compare/0.13.0...0.14.0
-[0.13.0]: https://github.com/nuke-build/nuke.git/compare/0.12.4...0.13.0
-[0.12.4]: https://github.com/nuke-build/nuke.git/compare/0.12.3...0.12.4
-[0.12.3]: https://github.com/nuke-build/nuke.git/compare/0.12.2...0.12.3
-[0.12.2]: https://github.com/nuke-build/nuke.git/compare/0.12.1...0.12.2
-[0.12.1]: https://github.com/nuke-build/nuke.git/compare/0.12.0...0.12.1
-[0.12.0]: https://github.com/nuke-build/nuke.git/compare/0.11.1...0.12.0
-[0.11.1]: https://github.com/nuke-build/nuke.git/compare/0.11.0...0.11.1
-[0.11.0]: https://github.com/nuke-build/nuke.git/compare/0.10.5...0.11.0
-[0.10.5]: https://github.com/nuke-build/nuke.git/compare/0.10.4...0.10.5
-[0.10.4]: https://github.com/nuke-build/nuke.git/compare/0.10.3...0.10.4
-[0.10.3]: https://github.com/nuke-build/nuke.git/compare/0.10.2...0.10.3
-[0.10.2]: https://github.com/nuke-build/nuke.git/compare/0.10.1...0.10.2
-[0.10.1]: https://github.com/nuke-build/nuke.git/compare/0.10.0...0.10.1
-[0.10.0]: https://github.com/nuke-build/nuke.git/compare/0.9.1...0.10.0
-[0.9.1]: https://github.com/nuke-build/nuke.git/compare/0.9.0...0.9.1
-[0.9.0]: https://github.com/nuke-build/nuke.git/compare/0.8.0...0.9.0
-[0.8.0]: https://github.com/nuke-build/nuke.git/compare/0.7.0...0.8.0
-[0.7.0]: https://github.com/nuke-build/nuke.git/compare/0.6.2...0.7.0
-[0.6.2]: https://github.com/nuke-build/nuke.git/compare/0.6.1...0.6.2
-[0.6.1]: https://github.com/nuke-build/nuke.git/compare/0.6.0...0.6.1
-[0.6.0]: https://github.com/nuke-build/nuke.git/compare/0.5.3...0.6.0
-[0.5.3]: https://github.com/nuke-build/nuke.git/compare/0.5.2...0.5.3
-[0.5.2]: https://github.com/nuke-build/nuke.git/compare/0.5.0...0.5.2
-[0.5.0]: https://github.com/nuke-build/nuke.git/compare/0.4.0...0.5.0
-[0.4.0]: https://github.com/nuke-build/nuke.git/compare/0.3.1...0.4.0
-[0.3.1]: https://github.com/nuke-build/nuke.git/compare/0.2.10...0.3.1
-[0.2.10]: https://github.com/nuke-build/nuke.git/compare/0.2.0...0.2.10
-[0.2.0]: https://github.com/nuke-build/nuke.git/tree/0.2.0
+[vNext]: https://github.com/nuke-build/nuke/compare/6.0.1...HEAD
+[6.0.1]: https://github.com/nuke-build/nuke/compare/6.0.0...6.0.1
+[6.0.0]: https://github.com/nuke-build/nuke/compare/5.3.0...6.0.0
+[5.3.0]: https://github.com/nuke-build/nuke/compare/5.2.1...5.3.0
+[5.2.1]: https://github.com/nuke-build/nuke/compare/5.2.0...5.2.1
+[5.2.0]: https://github.com/nuke-build/nuke/compare/5.1.4...5.2.0
+[5.1.4]: https://github.com/nuke-build/nuke/compare/5.1.3...5.1.4
+[5.1.3]: https://github.com/nuke-build/nuke/compare/5.1.2...5.1.3
+[5.1.2]: https://github.com/nuke-build/nuke/compare/5.1.1...5.1.2
+[5.1.1]: https://github.com/nuke-build/nuke/compare/5.1.0...5.1.1
+[5.1.0]: https://github.com/nuke-build/nuke/compare/5.0.2...5.1.0
+[5.0.2]: https://github.com/nuke-build/nuke/compare/5.0.1...5.0.2
+[5.0.1]: https://github.com/nuke-build/nuke/compare/5.0.0...5.0.1
+[5.0.0]: https://github.com/nuke-build/nuke/compare/0.25.0...5.0.0
+[0.25.0]: https://github.com/nuke-build/nuke/compare/0.24.11...0.25.0
+[0.24.11]: https://github.com/nuke-build/nuke/compare/0.24.10...0.24.11
+[0.24.10]: https://github.com/nuke-build/nuke/compare/0.24.9...0.24.10
+[0.24.9]: https://github.com/nuke-build/nuke/compare/0.24.8...0.24.9
+[0.24.8]: https://github.com/nuke-build/nuke/compare/0.24.7...0.24.8
+[0.24.7]: https://github.com/nuke-build/nuke/compare/0.24.6...0.24.7
+[0.24.6]: https://github.com/nuke-build/nuke/compare/0.24.5...0.24.6
+[0.24.5]: https://github.com/nuke-build/nuke/compare/0.24.4...0.24.5
+[0.24.4]: https://github.com/nuke-build/nuke/compare/0.24.2...0.24.4
+[0.24.2]: https://github.com/nuke-build/nuke/compare/0.24.1...0.24.2
+[0.24.1]: https://github.com/nuke-build/nuke/compare/0.24.0...0.24.1
+[0.24.0]: https://github.com/nuke-build/nuke/compare/0.23.7...0.24.0
+[0.23.7]: https://github.com/nuke-build/nuke/compare/0.23.6...0.23.7
+[0.23.6]: https://github.com/nuke-build/nuke/compare/0.23.5...0.23.6
+[0.23.5]: https://github.com/nuke-build/nuke/compare/0.23.4...0.23.5
+[0.23.4]: https://github.com/nuke-build/nuke/compare/0.23.3...0.23.4
+[0.23.3]: https://github.com/nuke-build/nuke/compare/0.23.2...0.23.3
+[0.23.2]: https://github.com/nuke-build/nuke/compare/0.23.1...0.23.2
+[0.23.1]: https://github.com/nuke-build/nuke/compare/0.23.0...0.23.1
+[0.23.0]: https://github.com/nuke-build/nuke/compare/0.22.2...0.23.0
+[0.22.2]: https://github.com/nuke-build/nuke/compare/0.22.1...0.22.2
+[0.22.1]: https://github.com/nuke-build/nuke/compare/0.22.0...0.22.1
+[0.22.0]: https://github.com/nuke-build/nuke/compare/0.21.2...0.22.0
+[0.21.2]: https://github.com/nuke-build/nuke/compare/0.21.1...0.21.2
+[0.21.1]: https://github.com/nuke-build/nuke/compare/0.21.0...0.21.1
+[0.21.0]: https://github.com/nuke-build/nuke/compare/0.20.1...0.21.0
+[0.20.1]: https://github.com/nuke-build/nuke/compare/0.20.0...0.20.1
+[0.20.0]: https://github.com/nuke-build/nuke/compare/0.19.2...0.20.0
+[0.19.2]: https://github.com/nuke-build/nuke/compare/0.19.1...0.19.2
+[0.19.1]: https://github.com/nuke-build/nuke/compare/0.19.0...0.19.1
+[0.19.0]: https://github.com/nuke-build/nuke/compare/0.18.0...0.19.0
+[0.18.0]: https://github.com/nuke-build/nuke/compare/0.17.7...0.18.0
+[0.17.7]: https://github.com/nuke-build/nuke/compare/0.17.6...0.17.7
+[0.17.6]: https://github.com/nuke-build/nuke/compare/0.17.5...0.17.6
+[0.17.5]: https://github.com/nuke-build/nuke/compare/0.17.4...0.17.5
+[0.17.4]: https://github.com/nuke-build/nuke/compare/0.17.3...0.17.4
+[0.17.3]: https://github.com/nuke-build/nuke/compare/0.17.2...0.17.3
+[0.17.2]: https://github.com/nuke-build/nuke/compare/0.17.1...0.17.2
+[0.17.1]: https://github.com/nuke-build/nuke/compare/0.17.0...0.17.1
+[0.17.0]: https://github.com/nuke-build/nuke/compare/0.16.0...0.17.0
+[0.16.0]: https://github.com/nuke-build/nuke/compare/0.15.0...0.16.0
+[0.15.0]: https://github.com/nuke-build/nuke/compare/0.14.1...0.15.0
+[0.14.1]: https://github.com/nuke-build/nuke/compare/0.14.0...0.14.1
+[0.14.0]: https://github.com/nuke-build/nuke/compare/0.13.0...0.14.0
+[0.13.0]: https://github.com/nuke-build/nuke/compare/0.12.4...0.13.0
+[0.12.4]: https://github.com/nuke-build/nuke/compare/0.12.3...0.12.4
+[0.12.3]: https://github.com/nuke-build/nuke/compare/0.12.2...0.12.3
+[0.12.2]: https://github.com/nuke-build/nuke/compare/0.12.1...0.12.2
+[0.12.1]: https://github.com/nuke-build/nuke/compare/0.12.0...0.12.1
+[0.12.0]: https://github.com/nuke-build/nuke/compare/0.11.1...0.12.0
+[0.11.1]: https://github.com/nuke-build/nuke/compare/0.11.0...0.11.1
+[0.11.0]: https://github.com/nuke-build/nuke/compare/0.10.5...0.11.0
+[0.10.5]: https://github.com/nuke-build/nuke/compare/0.10.4...0.10.5
+[0.10.4]: https://github.com/nuke-build/nuke/compare/0.10.3...0.10.4
+[0.10.3]: https://github.com/nuke-build/nuke/compare/0.10.2...0.10.3
+[0.10.2]: https://github.com/nuke-build/nuke/compare/0.10.1...0.10.2
+[0.10.1]: https://github.com/nuke-build/nuke/compare/0.10.0...0.10.1
+[0.10.0]: https://github.com/nuke-build/nuke/compare/0.9.1...0.10.0
+[0.9.1]: https://github.com/nuke-build/nuke/compare/0.9.0...0.9.1
+[0.9.0]: https://github.com/nuke-build/nuke/compare/0.8.0...0.9.0
+[0.8.0]: https://github.com/nuke-build/nuke/compare/0.7.0...0.8.0
+[0.7.0]: https://github.com/nuke-build/nuke/compare/0.6.2...0.7.0
+[0.6.2]: https://github.com/nuke-build/nuke/compare/0.6.1...0.6.2
+[0.6.1]: https://github.com/nuke-build/nuke/compare/0.6.0...0.6.1
+[0.6.0]: https://github.com/nuke-build/nuke/compare/0.5.3...0.6.0
+[0.5.3]: https://github.com/nuke-build/nuke/compare/0.5.2...0.5.3
+[0.5.2]: https://github.com/nuke-build/nuke/compare/0.5.0...0.5.2
+[0.5.0]: https://github.com/nuke-build/nuke/compare/0.4.0...0.5.0
+[0.4.0]: https://github.com/nuke-build/nuke/compare/0.3.1...0.4.0
+[0.3.1]: https://github.com/nuke-build/nuke/compare/0.2.10...0.3.1
+[0.2.10]: https://github.com/nuke-build/nuke/compare/0.2.0...0.2.10
+[0.2.0]: https://github.com/nuke-build/nuke/tree/0.2.0
 

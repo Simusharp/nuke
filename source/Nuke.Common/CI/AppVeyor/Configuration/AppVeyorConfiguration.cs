@@ -1,8 +1,9 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Nuke.Common.Tooling;
@@ -20,6 +21,7 @@ namespace Nuke.Common.CI.AppVeyor.Configuration
         public AppVeyorBranches Branches { get; set; }
         public string[] Init { get; set; }
         public string[] Cache { get; set; }
+        public bool Submodules { get; set; }
         public string[] InvokedTargets { get; set; }
         public string[] Artifacts { get; set; }
         public bool SkipTags { get; set; }
@@ -28,6 +30,7 @@ namespace Nuke.Common.CI.AppVeyor.Configuration
         public string OnlyCommitsAuthor { get; set; }
         public string SkipCommitsMessage { get; set; }
         public string SkipCommitsAuthor { get; set; }
+        public Dictionary<string, string> Secrets { get; set; }
 
         // ReSharper disable once CognitiveComplexity
         public override void Write(CustomFileWriter writer)
@@ -43,8 +46,8 @@ namespace Nuke.Common.CI.AppVeyor.Configuration
                 using (writer.WriteBlock("services:"))
                 {
                     Services.ForEach(x => writer.WriteLine($"- {x.GetValue().ToLowerInvariant()}"));
-                    writer.WriteLine();
                 }
+                writer.WriteLine();
             }
 
             if (Branches != null)
@@ -52,8 +55,8 @@ namespace Nuke.Common.CI.AppVeyor.Configuration
                 using (writer.WriteBlock("branches:"))
                 {
                     Branches.Write(writer);
-                    writer.WriteLine();
                 }
+                writer.WriteLine();
             }
 
             if (SkipTags ||
@@ -98,19 +101,28 @@ namespace Nuke.Common.CI.AppVeyor.Configuration
                 using (writer.WriteBlock("init:"))
                 {
                     Init.ForEach(x => writer.WriteLine($"- {x}"));
-                    writer.WriteLine();
                 }
+                writer.WriteLine();
+            }
+
+            if (Submodules)
+            {
+                using (writer.WriteBlock("install:"))
+                {
+                    writer.WriteLine("- git submodule update --init --recursive");
+                }
+                writer.WriteLine();
             }
 
             using (writer.WriteBlock("build_script:"))
             {
                 writer.WriteLine($@"- cmd: .\{BuildCmdPath} {InvokedTargets.JoinSpace()}");
                 writer.WriteLine($@"- sh: ./{BuildCmdPath} {InvokedTargets.JoinSpace()}");
-                writer.WriteLine();
             }
 
             if (Cache.Length > 0)
             {
+                writer.WriteLine();
                 using (writer.WriteBlock("cache:"))
                 {
                     Cache.ForEach(x => writer.WriteLine($"- {x}"));
@@ -119,9 +131,25 @@ namespace Nuke.Common.CI.AppVeyor.Configuration
 
             if (Artifacts.Length > 0)
             {
+                writer.WriteLine();
                 using (writer.WriteBlock("artifacts:"))
                 {
                     Artifacts.ForEach(x => writer.WriteLine($"- path: {x}"));
+                }
+            }
+
+            if (Secrets.Count > 0)
+            {
+                writer.WriteLine();
+                using (writer.WriteBlock("environment:"))
+                {
+                    foreach (var (key, value) in Secrets)
+                    {
+                        using (writer.WriteBlock($"{key}:"))
+                        {
+                            writer.WriteLine($"secure: {value}");
+                        }
+                    }
                 }
             }
         }

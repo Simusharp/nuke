@@ -8,7 +8,6 @@ using System.Linq;
 using JetBrains.Annotations;
 using Nuke.Common.Utilities;
 using Nuke.Common.Utilities.Collections;
-using Nuke.Common.ValueInjection;
 
 namespace Nuke.Common.CI.AzurePipelines.Configuration
 {
@@ -16,8 +15,8 @@ namespace Nuke.Common.CI.AzurePipelines.Configuration
     public class AzurePipelinesCmdStep : AzurePipelinesStep
     {
         public string[] InvokedTargets { get; set; }
-        public string PartitionName { get; set; }
         public string BuildCmdPath { get; set; }
+        public int? PartitionSize { get; set; }
         public Dictionary<string, string> Imports { get; set; }
 
         public override void Write(CustomFileWriter writer)
@@ -25,8 +24,8 @@ namespace Nuke.Common.CI.AzurePipelines.Configuration
             using (writer.WriteBlock("- task: CmdLine@2"))
             {
                 var arguments = $"{InvokedTargets.JoinSpace()} --skip";
-                if (PartitionName != null)
-                    arguments += $" --{ParameterService.GetParameterDashedName(PartitionName)} $(System.JobPositionInPhase)";
+                if (PartitionSize != null)
+                    arguments += $" --partition $(System.JobPositionInPhase)/{PartitionSize}";
 
                 using (writer.WriteBlock("inputs:"))
                 {

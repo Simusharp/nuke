@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -13,7 +13,7 @@ using Nuke.Common.Utilities.Collections;
 
 namespace Nuke.Common.ValueInjection
 {
-    public static class ValueInjectionUtility
+    internal static class ValueInjectionUtility
     {
         private static readonly Dictionary<MemberInfo, object> s_valueCache = new Dictionary<MemberInfo, object>();
 
@@ -66,7 +66,8 @@ namespace Nuke.Common.ValueInjection
                          nameof(NukeBuild.Help),
                          nameof(NukeBuild.Continue),
                          nameof(NukeBuild.NoLogo),
-                         nameof(NukeBuild.Verbosity)
+                         nameof(NukeBuild.Verbosity),
+                         nameof(NukeBuild.Partition)
                      }.Contains(member.Name))
                     continue;
 
@@ -78,8 +79,8 @@ namespace Nuke.Common.ValueInjection
                     continue;
 
                 var valueType = value.GetType();
-                ControlFlow.Assert(member.GetMemberType().IsAssignableFrom(valueType),
-                    $"Member '{member.Name}' must be of type '{valueType.Name}' to get its valued injected from '{attribute.GetType().Name}'.");
+                Assert.True(member.GetMemberType().IsAssignableFrom(valueType),
+                    $"Member '{member.Name}' must be of type '{valueType.Name}' to get its valued injected from '{attribute.GetType().Name}'");
                 member.SetValue(instance, value);
             }
         }
@@ -89,16 +90,19 @@ namespace Nuke.Common.ValueInjection
             // TODO: check duplicated names
             return GetInjectionMembers(type)
                 .Where(x => x.Attribute is ParameterAttribute attribute && (includeUnlisted || attribute.List))
-                .Select(x => x.Member).ToList();
+                .Select(x => x.Member)
+                .OrderBy(ParameterService.GetParameterMemberName).ToList();
         }
 
         public static IReadOnlyCollection<(MemberInfo Member, ValueInjectionAttributeBase Attribute)> GetInjectionMembers(Type type)
         {
             return type
-                .GetMembers(ReflectionUtility.All)
-                .Concat(type.GetInterfaces().SelectMany(x => x.GetMembers(ReflectionUtility.All)))
-                .Select(x => (Member: x, Attribute: x.GetCustomAttribute<ValueInjectionAttributeBase>()))
-                .Where(x => x.Attribute != null).ToList();
+                .GetAllMembers(
+                    x => x.HasCustomAttribute<ValueInjectionAttributeBase>(),
+                    bindingFlags: ReflectionUtility.All,
+                    allowAmbiguity: true)
+                .OrderBy(x => x.Name)
+                .Select(x => (Member: x, Attribute: x.GetCustomAttribute<ValueInjectionAttributeBase>())).ToList();
         }
     }
 }

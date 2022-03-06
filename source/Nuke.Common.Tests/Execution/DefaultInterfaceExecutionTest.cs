@@ -1,9 +1,12 @@
-﻿using System;
+﻿// Copyright 2021 Maintainers of NUKE.
+// Distributed under the MIT License.
+// https://github.com/nuke-build/nuke/blob/master/LICENSE
+
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using FluentAssertions;
 using Nuke.Common.Execution;
-using Nuke.Common.ValueInjection;
 using Xunit;
 
 namespace Nuke.Common.Tests.Execution
@@ -92,25 +95,26 @@ namespace Nuke.Common.Tests.Execution
         public void TestInvalidDependencyType()
         {
             var build = new InvalidDependencyTypeTestBuild();
-            Assert.Throws<InvalidCastException>(() => ExecutableTargetFactory.CreateAll(build, x => x.E));
+            Action action = () => ExecutableTargetFactory.CreateAll(build, x => x.E);
+            action.Should().Throw<InvalidCastException>();
         }
 
         [Fact]
         public void TestNonPublicTarget()
         {
             var build = new NonPublicTargetTestBuild();
-            var exception = Assert.Throws<Exception>(() => ExecutableTargetFactory.CreateAll(build));
-            exception.Message.Should()
-                .StartWith("Assertion failed: Property 'D' must be marked public to override inherited member from:");
+            Action action = () => ExecutableTargetFactory.CreateAll(build);
+            action.Should().Throw<Exception>().And.Message.Should()
+                .StartWith("Property 'D' must be marked public to override inherited member from:");
         }
 
         [Fact]
         public void TestDuplicatedTarget()
         {
             var build = new DuplicatedTargetTestBuild();
-            var exception = Assert.Throws<Exception>(() => ExecutableTargetFactory.CreateAll(build));
-            exception.Message.Should()
-                .StartWith("Assertion failed: Property 'D' must be implemented explicitly because it is inherited from multiple interfaces");
+            Action action = () => ExecutableTargetFactory.CreateAll(build);
+            action.Should().Throw<Exception>().And.Message.Should()
+                .StartWith("Property 'D' must be implemented explicitly because it is inherited from multiple interfaces");
         }
 
         [Fact]
@@ -122,16 +126,25 @@ namespace Nuke.Common.Tests.Execution
             targets.Count(x => x.Name == nameof(ITestBuild.D)).Should().Be(1);
         }
 
+        [Fact]
+        public void TestDeclaringAndImplementingComponent()
+        {
+            var build = new TestBuildWithDeclaringAndImplementingComponent();
+            var targets = ExecutableTargetFactory.CreateAll(build);
+
+            targets.Should().HaveCount(1);
+            targets.Single().Member.DeclaringType.Should().Be(typeof(IImplementingComponent));
+        }
+
         private interface IParameterInterface
             : INukeBuild
         {
-            [Parameter] string StringParameter => ValueInjectionUtility.TryGetValue(() => StringParameter);
+            [Parameter] string StringParameter => TryGetValue(() => StringParameter);
 
             public Target HelloWorld => _ => _
                 .Requires(() => StringParameter)
                 .Executes(() =>
                 {
-                    Logger.Info(StringParameter);
                 });
         }
 
@@ -214,6 +227,20 @@ namespace Nuke.Common.Tests.Execution
         {
             public Target D => _ => _
                 .Executes(() => { });
+        }
+
+        private class TestBuildWithDeclaringAndImplementingComponent : NukeBuild, IImplementingComponent
+        {
+        }
+
+        private interface IDeclaringComponent : INukeBuild
+        {
+            Target Foo { get; }
+        }
+
+        private interface IImplementingComponent : IDeclaringComponent
+        {
+            Target IDeclaringComponent.Foo => _ => _;
         }
     }
 }

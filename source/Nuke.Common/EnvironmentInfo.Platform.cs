@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -20,7 +20,7 @@ namespace Nuke.Common
         OSX
     }
 
-    public static partial class EnvironmentInfo
+    partial class EnvironmentInfo
     {
         /// <summary>
         /// Returns whether the operating system is x64 or not.
@@ -79,7 +79,7 @@ namespace Nuke.Common
         /// Returns the framework the build is running on.
         /// </summary>
         public static FrameworkName Framework
-            => new FrameworkName(typeof(NukeBuild).Assembly.GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName);
+            => new FrameworkName(Assembly.GetEntryAssembly().NotNull().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName);
 
         /// <summary>
         /// Returns the platform the build is running on.

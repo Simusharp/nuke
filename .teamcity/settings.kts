@@ -20,10 +20,9 @@ import jetbrains.buildServer.configs.kotlin.v2018_1.buildSteps.*
 import jetbrains.buildServer.configs.kotlin.v2018_1.triggers.*
 import jetbrains.buildServer.configs.kotlin.v2018_1.vcs.*
 
-version = "2020.1"
+version = "2021.2"
 
 project {
-    buildType(Compile)
     buildType(Pack)
     buildType(Test_P1T2)
     buildType(Test_P2T2)
@@ -32,49 +31,9 @@ project {
     buildType(ReportIssues)
     buildType(ReportCoverage)
 
-    buildTypesOrder = arrayListOf(Compile, Pack, Test_P1T2, Test_P2T2, Test, ReportDuplicates, ReportIssues, ReportCoverage)
+    buildTypesOrder = arrayListOf(Pack, Test_P1T2, Test_P2T2, Test, ReportDuplicates, ReportIssues, ReportCoverage)
 
     params {
-        select (
-            "env.Verbosity",
-            label = "Verbosity",
-            description = "Logging verbosity during build execution. Default is 'Normal'.",
-            value = "Normal",
-            options = listOf("Minimal" to "Minimal", "Normal" to "Normal", "Quiet" to "Quiet", "Verbose" to "Verbose"),
-            display = ParameterDisplay.NORMAL)
-        password (
-            "env.SlackWebhook",
-            label = "SlackWebhook",
-            value = "",
-            display = ParameterDisplay.NORMAL)
-        password (
-            "env.GitterAuthToken",
-            label = "GitterAuthToken",
-            value = "",
-            display = ParameterDisplay.NORMAL)
-        password (
-            "env.GitHubToken",
-            label = "GitHubToken",
-            value = "",
-            display = ParameterDisplay.NORMAL)
-        text (
-            "env.PublicNuGetApiKey",
-            label = "PublicNuGetApiKey",
-            value = "",
-            allowEmpty = true,
-            display = ParameterDisplay.NORMAL)
-        text (
-            "env.GitHubRegistryApiKey",
-            label = "GitHubRegistryApiKey",
-            value = "",
-            allowEmpty = true,
-            display = ParameterDisplay.NORMAL)
-        text (
-            "env.EnterpriseAccessToken",
-            label = "EnterpriseAccessToken",
-            value = "",
-            allowEmpty = true,
-            display = ParameterDisplay.NORMAL)
         checkbox (
             "env.AutoStash",
             label = "AutoStash",
@@ -82,9 +41,29 @@ project {
             checked = "True",
             unchecked = "False",
             display = ParameterDisplay.NORMAL)
+        select (
+            "env.Configuration",
+            label = "Configuration",
+            value = "Release",
+            options = listOf("Debug" to "Debug", "Release" to "Release"),
+            display = ParameterDisplay.NORMAL)
+        text (
+            "env.GitterRoomId",
+            label = "GitterRoomId",
+            value = "593f3dadd73408ce4f66db89",
+            allowEmpty = true,
+            display = ParameterDisplay.NORMAL)
         checkbox (
-            "env.UseHttps",
-            label = "UseHttps",
+            "env.IgnoreFailedSources",
+            label = "IgnoreFailedSources",
+            description = "Ignore unreachable sources during Restore",
+            value = "False",
+            checked = "True",
+            unchecked = "False",
+            display = ParameterDisplay.NORMAL)
+        checkbox (
+            "env.Major",
+            label = "Major",
             value = "False",
             checked = "True",
             unchecked = "False",
@@ -129,87 +108,47 @@ project {
             value = "",
             display = ParameterDisplay.NORMAL)
         text (
-            "env.NuGetSource",
-            label = "NuGetSource",
-            value = "https://api.nuget.org/v3/index.json",
-            allowEmpty = true,
-            display = ParameterDisplay.NORMAL)
-        password (
-            "env.NuGetApiKey",
-            label = "NuGetApiKey",
-            value = "",
-            display = ParameterDisplay.NORMAL)
-        password (
-            "env.SlackAppAccessToken",
-            label = "SlackAppAccessToken",
-            value = "",
-            display = ParameterDisplay.NORMAL)
-        password (
-            "env.SlackUserAccessToken",
-            label = "SlackUserAccessToken",
-            value = "",
-            display = ParameterDisplay.NORMAL)
-        password (
-            "env.AzurePipelinesAccessToken",
-            label = "AzurePipelinesAccessToken",
-            value = "",
-            display = ParameterDisplay.NORMAL)
-        password (
-            "env.SignPathApiToken",
-            label = "SignPathApiToken",
-            value = "",
-            display = ParameterDisplay.NORMAL)
-        text (
             "env.SignPathOrganizationId",
             label = "SignPathOrganizationId",
-            value = "",
-            allowEmpty = true,
-            display = ParameterDisplay.NORMAL)
-        text (
-            "env.SignPathProjectSlug",
-            label = "SignPathProjectSlug",
-            value = "",
+            value = "0fdaf334-6910-41f4-83d2-e58e4cccb087",
             allowEmpty = true,
             display = ParameterDisplay.NORMAL)
         text (
             "env.SignPathPolicySlug",
             label = "SignPathPolicySlug",
-            value = "",
+            value = "release-signing",
             allowEmpty = true,
+            display = ParameterDisplay.NORMAL)
+        text (
+            "env.SignPathProjectSlug",
+            label = "SignPathProjectSlug",
+            value = "nuke",
+            allowEmpty = true,
+            display = ParameterDisplay.NORMAL)
+        checkbox (
+            "env.UseHttps",
+            label = "UseHttps",
+            value = "False",
+            checked = "True",
+            unchecked = "False",
+            display = ParameterDisplay.NORMAL)
+        select (
+            "env.Verbosity",
+            label = "Verbosity",
+            description = "Logging verbosity during build execution. Default is 'Normal'.",
+            value = "Normal",
+            options = listOf("Minimal" to "Minimal", "Normal" to "Normal", "Quiet" to "Quiet", "Verbose" to "Verbose"),
             display = ParameterDisplay.NORMAL)
         text(
             "teamcity.runner.commandline.stdstreams.encoding",
             "UTF-8",
-            display = ParameterDisplay.HIDDEN
-        )
+            display = ParameterDisplay.HIDDEN)
+        text(
+            "teamcity.git.fetchAllHeads",
+            "true",
+            display = ParameterDisplay.HIDDEN)
     }
 }
-object Compile : BuildType({
-    name = "⚙️ Compile"
-    vcs {
-        root(DslContext.settingsRoot)
-        cleanCheckout = true
-    }
-    steps {
-        exec {
-            path = "build.cmd"
-            arguments = "Restore Compile --skip"
-            conditions { contains("teamcity.agent.jvm.os.name", "Windows") }
-        }
-        exec {
-            path = "build.sh"
-            arguments = "Restore Compile --skip"
-            conditions { doesNotContain("teamcity.agent.jvm.os.name", "Windows") }
-        }
-    }
-    params {
-        text(
-            "teamcity.ui.runButton.caption",
-            "Compile",
-            display = ParameterDisplay.HIDDEN
-        )
-    }
-})
 object Pack : BuildType({
     name = "📦 Pack"
     vcs {
@@ -220,12 +159,12 @@ object Pack : BuildType({
     steps {
         exec {
             path = "build.cmd"
-            arguments = "Pack --skip"
+            arguments = "Restore DownloadLicenses Compile Pack --skip"
             conditions { contains("teamcity.agent.jvm.os.name", "Windows") }
         }
         exec {
             path = "build.sh"
-            arguments = "Pack --skip"
+            arguments = "Restore DownloadLicenses Compile Pack --skip"
             conditions { doesNotContain("teamcity.agent.jvm.os.name", "Windows") }
         }
     }
@@ -233,18 +172,11 @@ object Pack : BuildType({
         text(
             "teamcity.ui.runButton.caption",
             "Pack",
-            display = ParameterDisplay.HIDDEN
-        )
+            display = ParameterDisplay.HIDDEN)
     }
     triggers {
         vcs {
             triggerRules = "+:**"
-        }
-    }
-    dependencies {
-        snapshot(Compile) {
-            onDependencyFailure = FailureAction.FAIL_TO_START
-            onDependencyCancel = FailureAction.CANCEL
         }
     }
 })
@@ -261,19 +193,13 @@ object Test_P1T2 : BuildType({
     steps {
         exec {
             path = "build.cmd"
-            arguments = "Test --skip --test-partition 1"
+            arguments = "Restore Compile Test --skip --partition 1/2"
             conditions { contains("teamcity.agent.jvm.os.name", "Windows") }
         }
         exec {
             path = "build.sh"
-            arguments = "Test --skip --test-partition 1"
+            arguments = "Restore Compile Test --skip --partition 1/2"
             conditions { doesNotContain("teamcity.agent.jvm.os.name", "Windows") }
-        }
-    }
-    dependencies {
-        snapshot(Compile) {
-            onDependencyFailure = FailureAction.FAIL_TO_START
-            onDependencyCancel = FailureAction.CANCEL
         }
     }
 })
@@ -290,19 +216,13 @@ object Test_P2T2 : BuildType({
     steps {
         exec {
             path = "build.cmd"
-            arguments = "Test --skip --test-partition 2"
+            arguments = "Restore Compile Test --skip --partition 2/2"
             conditions { contains("teamcity.agent.jvm.os.name", "Windows") }
         }
         exec {
             path = "build.sh"
-            arguments = "Test --skip --test-partition 2"
+            arguments = "Restore Compile Test --skip --partition 2/2"
             conditions { doesNotContain("teamcity.agent.jvm.os.name", "Windows") }
-        }
-    }
-    dependencies {
-        snapshot(Compile) {
-            onDependencyFailure = FailureAction.FAIL_TO_START
-            onDependencyCancel = FailureAction.CANCEL
         }
     }
 })
@@ -319,8 +239,7 @@ object Test : BuildType({
         text(
             "teamcity.ui.runButton.caption",
             "Test",
-            display = ParameterDisplay.HIDDEN
-        )
+            display = ParameterDisplay.HIDDEN)
     }
     triggers {
         vcs {
@@ -366,8 +285,7 @@ object ReportDuplicates : BuildType({
         text(
             "teamcity.ui.runButton.caption",
             "Report Duplicates",
-            display = ParameterDisplay.HIDDEN
-        )
+            display = ParameterDisplay.HIDDEN)
     }
     triggers {
         vcs {
@@ -397,8 +315,7 @@ object ReportIssues : BuildType({
         text(
             "teamcity.ui.runButton.caption",
             "Report Issues",
-            display = ParameterDisplay.HIDDEN
-        )
+            display = ParameterDisplay.HIDDEN)
     }
     triggers {
         vcs {
@@ -429,8 +346,7 @@ object ReportCoverage : BuildType({
         text(
             "teamcity.ui.runButton.caption",
             "Report Coverage",
-            display = ParameterDisplay.HIDDEN
-        )
+            display = ParameterDisplay.HIDDEN)
     }
     triggers {
         vcs {

@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -11,6 +11,7 @@ using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Utilities.Collections;
+using Serilog;
 
 namespace Nuke.Common.CI
 {
@@ -25,15 +26,18 @@ namespace Nuke.Common.CI
             var hasConfigurationChanged = GetGenerators(build)
                 .Where(x => x.AutoGenerate)
                 .AsParallel()
-                .Select(HasConfigurationChanged).ToList();
+                .Select(x => HasConfigurationChanged(x, build)).ToList();
             if (hasConfigurationChanged.All(x => !x))
                 return;
 
-            Logger.Info("Press any key to continue...");
+            if (build.Help)
+                return;
+
+            Host.Information("Press any key to continue ...");
             Console.ReadKey();
         }
 
-        private bool HasConfigurationChanged(IConfigurationGenerator generator)
+        private bool HasConfigurationChanged(IConfigurationGenerator generator, NukeBuild build)
         {
             generator.GeneratedFiles.ForEach(FileSystemTasks.EnsureExistingParentDirectory);
             var previousHashes = generator.GeneratedFiles
@@ -45,7 +49,7 @@ namespace Nuke.Common.CI
                     assembly.Location,
                     $"--{ConfigurationParameterName} {generator.Id} --host {generator.HostName}",
                     logInvocation: false,
-                    logOutput: true)
+                    logOutput: false)
                 .AssertZeroExitCode();
 
             var changedFiles = generator.GeneratedFiles
@@ -55,8 +59,10 @@ namespace Nuke.Common.CI
             if (changedFiles.Count == 0)
                 return false;
 
-            Logger.Warn($"{generator.DisplayName} configuration files have changed.");
-            changedFiles.ForEach(x => Logger.Trace($"Updated {x}"));
+            Telemetry.ConfigurationGenerated(generator.HostType, generator.Id, build);
+            // TODO: multi-line logging
+            Log.Warning("Configuration files for {Configuration} have changed.", generator.DisplayName);
+            changedFiles.ForEach(x => Log.Verbose("Updated {File}", x));
             return true;
         }
     }

@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -14,24 +14,13 @@ namespace Nuke.Common
 {
     internal static class Constants
     {
-        internal static readonly string[] KnownWords =
-        {
-            "DotNet",
-            "GitHub",
-            "GitVersion",
-            "MSBuild",
-            "NuGet",
-            "ReSharper",
-            "AppVeyor",
-            "TeamCity",
-            "GitLab"
-        };
-
+        internal const string NukeFileName = NukeDirectoryName;
         internal const string NukeDirectoryName = ".nuke";
         internal const string NukeCommonPackageId = nameof(Nuke) + "." + nameof(Common);
         internal const string BuildSchemaFileName = "build.schema.json";
 
         internal const string TargetsSeparator = "+";
+        internal const string RootDirectoryParameterName = "Root";
         internal const string InvokedTargetsParameterName = "Target";
         internal const string SkippedTargetsParameterName = "Skip";
         internal const string LoadedLocalProfilesParameterName = "Profile";
@@ -41,17 +30,26 @@ namespace Nuke.Common
         internal const string ParametersFilePrefix = "parameters";
         internal const string DefaultProfileName = "$default";
 
+        internal const string GlobalToolVersionEnvironmentKey = "NUKE_GLOBAL_TOOL_VERSION";
+        internal const string GlobalToolStartTimeEnvironmentKey = "NUKE_GLOBAL_TOOL_START_TIME";
+
         internal static AbsolutePath GlobalTemporaryDirectory => (AbsolutePath) Path.GetTempPath();
+        internal static AbsolutePath GlobalNukeDirectory => (AbsolutePath) Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) / ".nuke";
 
         [CanBeNull]
-        internal static AbsolutePath TryGetRootDirectoryFrom(string startDirectory, bool includeLegacy = false)
+        internal static AbsolutePath TryGetRootDirectoryFrom(string startDirectory, bool includeLegacy = true)
         {
-            return (AbsolutePath) FileSystemTasks.FindParentDirectory(
+            var rootDirectory = (AbsolutePath) FileSystemTasks.FindParentDirectory(
                 startDirectory,
                 predicate: x =>
-                    includeLegacy
-                        ? x.GetFileSystemInfos(NukeDirectoryName).Any()
-                        : x.GetDirectories(NukeDirectoryName).Any());
+                    x.GetDirectories(NukeDirectoryName).Any() ||
+                    includeLegacy && x.GetFiles(NukeFileName).Any());
+            return rootDirectory != GlobalNukeDirectory.Parent ? rootDirectory : null;
+        }
+
+        internal static bool IsLegacy(AbsolutePath rootDirectory)
+        {
+            return File.Exists(rootDirectory / NukeFileName);
         }
 
         internal static AbsolutePath GetNukeDirectory(AbsolutePath rootDirectory)
@@ -61,7 +59,9 @@ namespace Nuke.Common
 
         internal static AbsolutePath GetTemporaryDirectory(AbsolutePath rootDirectory)
         {
-            return GetNukeDirectory(rootDirectory) / "temp";
+            return !IsLegacy(rootDirectory)
+                ? GetNukeDirectory(rootDirectory) / "temp"
+                : rootDirectory / ".tmp";
         }
 
         internal static AbsolutePath GetCompletionFile(AbsolutePath rootDirectory)
@@ -89,7 +89,7 @@ namespace Nuke.Common
 
         internal static AbsolutePath GetDefaultParametersFile(AbsolutePath rootDirectory)
         {
-            return GetNukeDirectory(rootDirectory) / $"{ParametersFilePrefix}.json";
+            return GetNukeDirectory(rootDirectory) / GetParametersFileName(DefaultProfileName);
         }
 
         internal static IEnumerable<AbsolutePath> GetParametersProfileFiles(AbsolutePath rootDirectory)
@@ -97,9 +97,14 @@ namespace Nuke.Common
             return GetNukeDirectory(rootDirectory).GlobFiles($"{ParametersFilePrefix}.*.json");
         }
 
-        internal static AbsolutePath GetParametersProfileFile(AbsolutePath rootDirectory, string name)
+        internal static AbsolutePath GetParametersProfileFile(AbsolutePath rootDirectory, string profile)
         {
-            return GetNukeDirectory(rootDirectory) / $"{ParametersFilePrefix}.{name}.json";
+            return GetNukeDirectory(rootDirectory) / GetParametersFileName(profile);
+        }
+
+        internal static string GetParametersFileName(string profile)
+        {
+            return profile == DefaultProfileName ? $"{ParametersFilePrefix}.json" : $"{ParametersFilePrefix}.{profile}.json";
         }
 
         public static IEnumerable<string> GetProfileNames(AbsolutePath rootDirectory)
@@ -115,9 +120,9 @@ namespace Nuke.Common
             return $"NUKE: {rootDirectory} ({profile ?? DefaultProfileName})";
         }
 
-        internal static string GetProfilePasswordEnvironmentVariableName(string profile)
+        internal static string GetProfilePasswordParameterName(string profile)
         {
-            return $"NUKE_PARAMS_{profile.Replace("?", "_")}";
+            return $"PARAMS_{profile.TrimStart(DefaultProfileName).ToUpperInvariant().Replace(".", "_")}_KEY".Replace("_", string.Empty);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -6,7 +6,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using JetBrains.Annotations;
 using Nuke.Common;
 using Nuke.Common.IO;
@@ -19,31 +18,46 @@ namespace Nuke.GlobalTool
     {
         private const char CommandPrefix = ':';
 
+        private static string CurrentBuildScriptName => EnvironmentInfo.IsWin ? "build.ps1" : "build.sh";
+
         private static int Main(string[] args)
         {
             try
             {
-                // TODO: parse from --root argument
-                var rootDirectory = Constants.TryGetRootDirectoryFrom(Directory.GetCurrentDirectory(), includeLegacy: true);
+                var rootDirectory = TryGetRootDirectory();
 
                 var buildScript = rootDirectory != null
-                    ? (AbsolutePath) new DirectoryInfo(rootDirectory)
-                        .EnumerateFiles($"build.{(EnvironmentInfo.IsWin ? "ps1" : "sh")}", maxDepth: 2)
-                        .FirstOrDefault()?.FullName.DoubleQuoteIfNeeded()
+                    ? (AbsolutePath)new DirectoryInfo(rootDirectory)
+                        .EnumerateFiles(CurrentBuildScriptName, maxDepth: 2)
+                        .FirstOrDefault()?.FullName
                     : null;
 
                 return Handle(args, rootDirectory, buildScript);
             }
             catch (Exception exception)
             {
-                Logger.Error(exception);
+                Host.Error(exception.Unwrap().Message);
                 return 1;
             }
         }
 
         private static void PrintInfo()
         {
-            Logger.Info($"NUKE Global Tool {typeof(Program).Assembly.GetInformationalText()}");
+            Host.Information($"NUKE Global Tool {typeof(Program).Assembly.GetInformationalText()}");
+        }
+
+        [CanBeNull]
+        private static AbsolutePath TryGetRootDirectory()
+        {
+            // TODO: copied in NukeBuild.GetRootDirectory
+            var parameterValue = EnvironmentInfo.GetParameter(() => NukeBuild.RootDirectory);
+            if (parameterValue != null)
+                return parameterValue;
+
+            if (EnvironmentInfo.GetParameter<bool>(() => NukeBuild.RootDirectory))
+                return EnvironmentInfo.WorkingDirectory;
+
+            return Constants.TryGetRootDirectoryFrom(Directory.GetCurrentDirectory());
         }
 
         private static int Handle(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
@@ -53,28 +67,23 @@ namespace Nuke.GlobalTool
             {
                 var command = args.First().Trim(CommandPrefix).Replace("-", string.Empty);
                 if (string.IsNullOrWhiteSpace(command))
-                    ControlFlow.Fail($"No command specified. Usage is: nuke {CommandPrefix}<command> [args]");
+                    Assert.Fail($"No command specified. Usage is: nuke {CommandPrefix}<command> [args]");
 
-                var availableCommands = typeof(Program).GetMethods(BindingFlags.Static | BindingFlags.Public);
-                var commandHandler = availableCommands
-                    .SingleOrDefault(x => x.Name.EqualsOrdinalIgnoreCase(command));
-                ControlFlow.Assert(commandHandler != null,
-                    new[]
-                        {
-                            $"Command '{command}' is not supported.",
-                            "Available commands are:"
-                        }
-                        .Concat(availableCommands.Select(x => $"  - {x.Name}").OrderBy(x => x)).JoinNewLine());
+                var availableCommands = typeof(Program).GetMethods(ReflectionUtility.Static).Where(x => x.ReturnType == typeof(int)).ToList();
+                var commandHandler = availableCommands.SingleOrDefault(x => x.Name.EqualsOrdinalIgnoreCase(command));
+                Assert.NotNull(commandHandler,
+                    new[] { $"Command '{command}' is not supported, available commands are:" }
+                        .Concat(availableCommands.Where(x => x.IsPublic).Select(x => $"  - {x.Name}").OrderBy(x => x)).JoinNewLine());
                 // TODO: add assertions about return type and parameters
 
                 var commandArguments = new object[] { args.Skip(count: 1).ToArray(), rootDirectory, buildScript };
-                return (int) commandHandler.Invoke(obj: null, commandArguments);
+                return (int)commandHandler.Invoke(obj: null, commandArguments);
             }
 
             if (rootDirectory == null || buildScript == null)
             {
                 var missingItem = rootDirectory == null
-                    ? $"{Constants.NukeDirectoryName} directory"
+                    ? $"{Constants.NukeDirectoryName} directory/file"
                     : "build.ps1/sh files";
 
                 return UserConfirms($"Could not find {missingItem}. Do you want to setup a build?")
@@ -92,16 +101,19 @@ namespace Nuke.GlobalTool
 
         private static Process Build(string buildScript, string arguments)
         {
-            return Process.Start(
+            var startInfo =
                 new ProcessStartInfo
                 {
                     FileName = EnvironmentInfo.IsWin
                         ? ToolPathResolver.GetPathExecutable("powershell")
                         : ToolPathResolver.GetPathExecutable("bash"),
                     Arguments = EnvironmentInfo.IsWin
-                        ? $"-ExecutionPolicy ByPass -NoProfile -File {buildScript} {arguments}"
+                        ? $"-ExecutionPolicy ByPass -NoProfile -File {buildScript.DoubleQuoteIfNeeded()} {arguments}"
                         : $"{buildScript} {arguments}"
-                }).NotNull();
+                };
+            startInfo.Environment[Constants.GlobalToolVersionEnvironmentKey] = typeof(Program).Assembly.GetVersionText();
+            startInfo.Environment[Constants.GlobalToolStartTimeEnvironmentKey] = DateTime.Now.ToString("O");
+            return Process.Start(startInfo).NotNull();
         }
 
         private static bool UserConfirms(string question)
@@ -109,7 +121,7 @@ namespace Nuke.GlobalTool
             ConsoleKey response;
             do
             {
-                Logger.Normal($"{question} [y/n]");
+                Host.Debug($"{question} [y/n]");
                 response = Console.ReadKey(intercept: true).Key;
             } while (response != ConsoleKey.Y && response != ConsoleKey.N);
 

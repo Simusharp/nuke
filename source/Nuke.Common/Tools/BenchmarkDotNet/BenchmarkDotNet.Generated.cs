@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/BenchmarkDotNet.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/BenchmarkDotNet/BenchmarkDotNet.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -37,9 +37,9 @@ namespace Nuke.Common.Tools.BenchmarkDotNet
         ///   <p>Powerful .NET library for benchmarking</p>
         ///   <p>For more details, visit the <a href="https://benchmarkdotnet.org/">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> BenchmarkDotNet(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> BenchmarkDotNet(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(BenchmarkDotNetPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, BenchmarkDotNetLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(BenchmarkDotNetPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, BenchmarkDotNetLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -2593,7 +2593,7 @@ namespace Nuke.Common.Tools.BenchmarkDotNet
         public static BenchmarkDotNetJob Medium = (BenchmarkDotNetJob) "Medium";
         public static BenchmarkDotNetJob Long = (BenchmarkDotNetJob) "Long";
         public static BenchmarkDotNetJob Default = (BenchmarkDotNetJob) "Default";
-        public static explicit operator BenchmarkDotNetJob(string value)
+        public static implicit operator BenchmarkDotNetJob(string value)
         {
             return new BenchmarkDotNetJob { Value = value };
         }
@@ -2613,7 +2613,7 @@ namespace Nuke.Common.Tools.BenchmarkDotNet
         public static BenchmarkDotNetOutlierMode RemoveUpper = (BenchmarkDotNetOutlierMode) "RemoveUpper";
         public static BenchmarkDotNetOutlierMode RemoveLower = (BenchmarkDotNetOutlierMode) "RemoveLower";
         public static BenchmarkDotNetOutlierMode RemoveAll = (BenchmarkDotNetOutlierMode) "RemoveAll";
-        public static explicit operator BenchmarkDotNetOutlierMode(string value)
+        public static implicit operator BenchmarkDotNetOutlierMode(string value)
         {
             return new BenchmarkDotNetOutlierMode { Value = value };
         }
@@ -2636,7 +2636,7 @@ namespace Nuke.Common.Tools.BenchmarkDotNet
         public static BenchmarkDotNetExporter JSON = (BenchmarkDotNetExporter) "JSON";
         public static BenchmarkDotNetExporter HTML = (BenchmarkDotNetExporter) "HTML";
         public static BenchmarkDotNetExporter XML = (BenchmarkDotNetExporter) "XML";
-        public static explicit operator BenchmarkDotNetExporter(string value)
+        public static implicit operator BenchmarkDotNetExporter(string value)
         {
             return new BenchmarkDotNetExporter { Value = value };
         }
@@ -2656,7 +2656,7 @@ namespace Nuke.Common.Tools.BenchmarkDotNet
         public static BenchmarkDotNetProfiler ETW = (BenchmarkDotNetProfiler) "ETW";
         public static BenchmarkDotNetProfiler CV = (BenchmarkDotNetProfiler) "CV";
         public static BenchmarkDotNetProfiler NativeMemory = (BenchmarkDotNetProfiler) "NativeMemory";
-        public static explicit operator BenchmarkDotNetProfiler(string value)
+        public static implicit operator BenchmarkDotNetProfiler(string value)
         {
             return new BenchmarkDotNetProfiler { Value = value };
         }
@@ -2675,7 +2675,7 @@ namespace Nuke.Common.Tools.BenchmarkDotNet
         public static BenchmarkDotNetRunStrategy Throughput = (BenchmarkDotNetRunStrategy) "Throughput";
         public static BenchmarkDotNetRunStrategy ColdStart = (BenchmarkDotNetRunStrategy) "ColdStart";
         public static BenchmarkDotNetRunStrategy Monitoring = (BenchmarkDotNetRunStrategy) "Monitoring";
-        public static explicit operator BenchmarkDotNetRunStrategy(string value)
+        public static implicit operator BenchmarkDotNetRunStrategy(string value)
         {
             return new BenchmarkDotNetRunStrategy { Value = value };
         }
@@ -2693,7 +2693,7 @@ namespace Nuke.Common.Tools.BenchmarkDotNet
     {
         public static BenchmarkDotNetCaseMode Flat = (BenchmarkDotNetCaseMode) "Flat";
         public static BenchmarkDotNetCaseMode Tree = (BenchmarkDotNetCaseMode) "Tree";
-        public static explicit operator BenchmarkDotNetCaseMode(string value)
+        public static implicit operator BenchmarkDotNetCaseMode(string value)
         {
             return new BenchmarkDotNetCaseMode { Value = value };
         }

@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -9,6 +9,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Nuke.Common.Utilities.Collections;
+// ReSharper disable MissingBaseTypeHighlighting
 
 namespace Nuke.Common.Execution
 {
@@ -16,6 +17,8 @@ namespace Nuke.Common.Execution
     public class ExecutableTarget
     {
         internal TargetDefinition Definition { get; set; }
+        internal Stopwatch Stopwatch { get; } = new Stopwatch();
+
         public MemberInfo Member { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
@@ -36,16 +39,20 @@ namespace Nuke.Common.Execution
         public IReadOnlyCollection<ExecutableTarget> AllDependencies
             => ExecutionDependencies.Concat(OrderDependencies).Concat(TriggerDependencies).ToList();
 
+        public int? PartitionSize { get; set; }
+        public LookupTable<ExecutableTarget, string> ArtifactDependencies { get; internal set; } = new LookupTable<ExecutableTarget, string>();
+        public ICollection<string> ArtifactProducts { get; internal set; } = new List<string>();
+
+        public TimeSpan Duration => Stopwatch.Elapsed;
         public bool IsDefault { get; set; }
         public ExecutionStatus Status { get; set; }
-        public TimeSpan Duration { get; set; }
         public bool Invoked { get; set; }
-        public List<(string Caption, string Text)> SummaryInformation { get; } = new List<(string Caption, string Text)>();
+        public Dictionary<string, string> SummaryInformation { get; internal set; } = new Dictionary<string, string>();
 
         public string SkipReason
         {
-            get => SummaryInformation.FirstOrDefault(x => x.Caption == nameof(SkipReason)).Text;
-            set => SummaryInformation.Add((nameof(SkipReason), value));
+            get => SummaryInformation.GetValueOrDefault(nameof(SkipReason));
+            set => SummaryInformation = new Dictionary<string, string> { [nameof(SkipReason)] = value };
         }
     }
 }

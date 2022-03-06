@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -73,8 +73,6 @@ namespace Nuke.Common.Tests
         {
             AssertProperty(instance, property);
             Assert.True(instance.Ci);
-            Assert.True(instance.GitLabCi);
-            Assert.True(instance.Server);
         }
 
         public static IEnumerable<object[]> Properties(Type type)
@@ -102,7 +100,7 @@ namespace Nuke.Common.Tests
             else if (property.PropertyType != typeof(string))
                 Nullable.GetUnderlyingType(property.PropertyType).Should().NotBeNull();
 
-            if (!(value is string strValue) || property.GetCustomAttribute<NoConvertAttribute>() != null)
+            if (value is not string strValue || property.GetCustomAttribute<NoConvertAttribute>() != null)
                 return;
 
             bool.TryParse(strValue, out _).Should().BeFalse("boolean");

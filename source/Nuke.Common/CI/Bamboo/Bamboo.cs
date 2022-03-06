@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -17,6 +17,8 @@ namespace Nuke.Common.CI.Bamboo
     [ExcludeFromCodeCoverage]
     public class Bamboo : Host, IBuildServer
     {
+        public new static Bamboo Instance => Host.Instance as Bamboo;
+
         internal static bool IsRunningBamboo => !Environment.GetEnvironmentVariable("BAMBOO_SERVER").IsNullOrEmpty();
 
         internal Bamboo()

@@ -1,10 +1,9 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -13,6 +12,7 @@ using Nuke.Common.IO;
 using Nuke.Common.Utilities;
 using Nuke.Common.Utilities.Collections;
 using Nuke.Common.ValueInjection;
+using Serilog;
 
 namespace Nuke.Common.Execution
 {
@@ -66,7 +66,7 @@ namespace Nuke.Common.Execution
                 var previousBuild = File.ReadAllLines(BuildAttemptFile);
                 if (previousBuild.FirstOrDefault() != invocationHash)
                 {
-                    Logger.Warn("Build invocation changed. Starting over...");
+                    Log.Warning("Build invocation changed. Restarting ...");
                     return new string[0];
                 }
 
@@ -100,31 +100,36 @@ namespace Nuke.Common.Execution
                 return;
             }
 
-            using (Logger.Block(target.Name))
+            using (Logging.SetTarget(target.Name))
+            using (NukeBuild.Host.WriteBlock(target.Name))
             {
+                target.Stopwatch.Start();
                 target.Status = ExecutionStatus.Running;
                 build.ExecuteExtension<IOnTargetRunning>(x => x.OnTargetRunning(build, target));
-                var stopwatch = Stopwatch.StartNew();
                 try
                 {
                     target.Actions.ForEach(x => x());
+                    target.Stopwatch.Stop();
                     target.Status = ExecutionStatus.Succeeded;
                     build.ExecuteExtension<IOnTargetSucceeded>(x => x.OnTargetSucceeded(build, target));
+
                     AppendToBuildAttemptFile(target.Name);
                 }
                 catch (Exception exception)
                 {
-                    Logger.Error(exception);
+                    build.ReportSummary(_ =>
+                        target.SummaryInformation.Any()
+                            ? target.SummaryInformation
+                            : _.AddPair(exception.GetType().Name, exception.Message.SplitLineBreaks().First()));
+
+                    Log.Error(exception, "Target {TargetName} failed", target.Name);
+
+                    target.Stopwatch.Stop();
                     target.Status = ExecutionStatus.Failed;
-                    if (!target.SummaryInformation.Any())
-                        target.SummaryInformation.Add((exception.GetType().Name, exception.Message));
                     build.ExecuteExtension<IOnTargetFailed>(x => x.OnTargetFailed(build, target));
+
                     if (!target.ProceedAfterFailure && !failureMode)
                         throw new TargetExecutionException(target.Name, exception);
-                }
-                finally
-                {
-                    target.Duration = stopwatch.Elapsed;
                 }
             }
         }

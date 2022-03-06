@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/OpenCover.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/OpenCover/OpenCover.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -37,9 +37,9 @@ namespace Nuke.Common.Tools.OpenCover
         ///   <p>OpenCover is a code coverage tool for .NET 2 and above (Windows OSs only - no MONO), with support for 32 and 64 processes and covers both branch and sequence points.</p>
         ///   <p>For more details, visit the <a href="https://github.com/OpenCover/opencover">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> OpenCover(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> OpenCover(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(OpenCoverPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, OpenCoverLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(OpenCoverPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, OpenCoverLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -1606,7 +1606,7 @@ namespace Nuke.Common.Tools.OpenCover
         public static OpenCoverVerbosity Debug = (OpenCoverVerbosity) "Debug";
         public static OpenCoverVerbosity Verbose = (OpenCoverVerbosity) "Verbose";
         public static OpenCoverVerbosity All = (OpenCoverVerbosity) "All";
-        public static explicit operator OpenCoverVerbosity(string value)
+        public static implicit operator OpenCoverVerbosity(string value)
         {
             return new OpenCoverVerbosity { Value = value };
         }
@@ -1626,7 +1626,7 @@ namespace Nuke.Common.Tools.OpenCover
         public static OpenCoverSkipping Filter = (OpenCoverSkipping) "Filter";
         public static OpenCoverSkipping Attribute = (OpenCoverSkipping) "Attribute";
         public static OpenCoverSkipping MissingPdb = (OpenCoverSkipping) "MissingPdb";
-        public static explicit operator OpenCoverSkipping(string value)
+        public static implicit operator OpenCoverSkipping(string value)
         {
             return new OpenCoverSkipping { Value = value };
         }
@@ -1645,7 +1645,7 @@ namespace Nuke.Common.Tools.OpenCover
         public static RegistrationType User = (RegistrationType) "User";
         public static RegistrationType Path32 = (RegistrationType) "Path32";
         public static RegistrationType Path64 = (RegistrationType) "Path64";
-        public static explicit operator RegistrationType(string value)
+        public static implicit operator RegistrationType(string value)
         {
             return new RegistrationType { Value = value };
         }

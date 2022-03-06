@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/NUnit.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/NUnit/NUnit.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -37,9 +37,9 @@ namespace Nuke.Common.Tools.NUnit
         ///   <p>NUnit is a unit-testing framework for all .Net languages. Initially ported from <a href="http://www.junit.org/">JUnit</a>, the current production release, version 3.0, has been completely rewritten with many new features and support for a wide range of .NET platforms.</p>
         ///   <p>For more details, visit the <a href="https://www.nunit.org/">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> NUnit(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> NUnit(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(NUnitPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, NUnitLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(NUnitPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, NUnitLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -2140,7 +2140,7 @@ namespace Nuke.Common.Tools.NUnit
         public static NUnitProcessType Single = (NUnitProcessType) "Single";
         public static NUnitProcessType Separate = (NUnitProcessType) "Separate";
         public static NUnitProcessType Multiple = (NUnitProcessType) "Multiple";
-        public static explicit operator NUnitProcessType(string value)
+        public static implicit operator NUnitProcessType(string value)
         {
             return new NUnitProcessType { Value = value };
         }
@@ -2159,7 +2159,7 @@ namespace Nuke.Common.Tools.NUnit
         public static NUnitPrincipalPolicy UnauthenticatedPrincipal = (NUnitPrincipalPolicy) "UnauthenticatedPrincipal";
         public static NUnitPrincipalPolicy NoPrincipal = (NUnitPrincipalPolicy) "NoPrincipal";
         public static NUnitPrincipalPolicy WindowsPrincipal = (NUnitPrincipalPolicy) "WindowsPrincipal";
-        public static explicit operator NUnitPrincipalPolicy(string value)
+        public static implicit operator NUnitPrincipalPolicy(string value)
         {
             return new NUnitPrincipalPolicy { Value = value };
         }
@@ -2178,7 +2178,7 @@ namespace Nuke.Common.Tools.NUnit
         public static NUnitLabelType Off = (NUnitLabelType) "Off";
         public static NUnitLabelType On = (NUnitLabelType) "On";
         public static NUnitLabelType All = (NUnitLabelType) "All";
-        public static explicit operator NUnitLabelType(string value)
+        public static implicit operator NUnitLabelType(string value)
         {
             return new NUnitLabelType { Value = value };
         }
@@ -2199,7 +2199,7 @@ namespace Nuke.Common.Tools.NUnit
         public static NUnitTraceLevel Warning = (NUnitTraceLevel) "Warning";
         public static NUnitTraceLevel Info = (NUnitTraceLevel) "Info";
         public static NUnitTraceLevel Verbose = (NUnitTraceLevel) "Verbose";
-        public static explicit operator NUnitTraceLevel(string value)
+        public static implicit operator NUnitTraceLevel(string value)
         {
             return new NUnitTraceLevel { Value = value };
         }

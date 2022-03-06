@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -7,7 +7,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
-using Console = Colorful.Console;
 
 namespace Nuke.Common.Utilities
 {
@@ -32,7 +31,7 @@ namespace Nuke.Common.Utilities
             if (s_interrupted)
                 return defaultValue;
 
-            Logger.Normal(question);
+            Host.Information(question);
 
             ConsoleKeyInfo key;
             var input = new StringBuilder();
@@ -79,7 +78,7 @@ namespace Nuke.Common.Utilities
             var selection = 0;
             ConsoleKey key;
 
-            Logger.Normal(question);
+            Host.Information(question);
             do
             {
                 for (var i = 0; i < options.Length; i++)

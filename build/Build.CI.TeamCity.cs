@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -8,12 +8,10 @@ using System.Linq;
 using Nuke.Common;
 using Nuke.Common.CI.TeamCity.Configuration;
 using Nuke.Common.Execution;
-using Nuke.Common.Tooling;
 using Nuke.Common.Utilities.Collections;
 using Nuke.Components;
 
 [TeamCity(
-    Version = "2020.1",
     VcsTriggeredTargets =
         new[]
         {
@@ -27,11 +25,12 @@ using Nuke.Components;
         new[]
         {
             nameof(IRestore.Restore),
-            nameof(DownloadFonts),
+            nameof(DownloadLicenses),
+            nameof(ICompile.Compile),
             nameof(InstallFonts),
             nameof(ReleaseImage)
         },
-    ExcludedTargets = new[] { nameof(Clean) })]
+    ExcludedTargets = new[] { nameof(Clean), nameof(ISignPackages.SignPackages) })]
 partial class Build
 {
     public class TeamCityAttribute : Nuke.Common.CI.TeamCity.TeamCityAttribute
@@ -46,10 +45,10 @@ partial class Build
             return base.GetBuildTypes(build, executableTarget, vcsRoot, buildTypes, relevantTargets)
                 .ForEachLazy(x =>
                 {
-                    var symbol = CustomNames.GetValueOrDefault(x.InvokedTargets.Last()).NotNull("symbol != null");
-                    x.Name = x.PartitionName == null
+                    var symbol = CustomNames.GetValueOrDefault(x.InvokedTargets.Last());
+                    x.Name = (x.Partition == null
                         ? $"{symbol} {x.Name}"
-                        : $"{symbol} {x.InvokedTargets.Last()} 🧩 {x.Partition}";
+                        : $"{symbol} {x.InvokedTargets.Last()} 🧩 {x.Partition}").Trim();
                 });
         }
     }

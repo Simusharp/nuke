@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -45,20 +45,22 @@ namespace Nuke.Common
     /// </example>
     [PublicAPI]
     // Before logo
+    [HandleShellCompletion(Priority = 200)]
     [ArgumentsFromParametersFile(Priority = 150)]
     [ArgumentsFromCommitMessage(Priority = 150)]
     [InjectParameterValues(Priority = 100)]
     [GenerateBuildServerConfigurations(Priority = 50)]
     [InvokeBuildServerConfigurationGeneration(Priority = 45)]
-    [HandleShellCompletion(Priority = 40)]
     [UnsetVisualStudioEnvironmentVariables]
     // [SaveBuildProfile(Priority = 30)]
     // [LoadBuildProfiles(Priority = 25)]
     // After logo
     [HandleHelpRequests(Priority = 5)]
+    [Telemetry]
     [HandleVisualStudioDebugging]
     [InjectNonParameterValues(Priority = -100)]
     // After finish
+    [UpdateNotification(Priority = 10)]
     [SerializeBuildServerState]
     public abstract partial class NukeBuild : INukeBuild
     {
@@ -73,7 +75,8 @@ namespace Nuke.Common
         }
 
         internal IReadOnlyCollection<ExecutableTarget> ExecutableTargets { get; set; }
-        internal IReadOnlyCollection<ExecutableTarget> ExecutionPlan { get; set; }
+
+        public IReadOnlyCollection<ExecutableTarget> ExecutionPlan { get; set; }
 
         /// <summary>
         /// Gets the list of targets that were invoked.
@@ -147,6 +150,9 @@ namespace Nuke.Common
         [Parameter("Indicates to continue a previously failed build attempt.")]
         public bool Continue { get; internal set; }
 
+        [Parameter("Partition to use on CI.", List = false)]
+        public Partition Partition { get; internal set; } = Partition.Single;
+
         [CanBeNull]
         protected internal virtual string NuGetPackagesConfigFile =>
             BuildProjectDirectory != null
@@ -162,8 +168,16 @@ namespace Nuke.Common
         internal IEnumerable<string> TargetNames => ExecutableTargetFactory.GetTargetProperties(GetType()).Select(x => x.GetDisplayShortName());
         internal IEnumerable<string> HostNames => Host.AvailableTypes.Select(x => x.Name);
 
-        public bool IsSuccessful => ExecutionPlan.All(x => x.Status != ExecutionStatus.Failed && x.Status != ExecutionStatus.Aborted);
-        public bool IsFailing => !IsSuccessful;
+        public bool IsSuccessful => ExecutionPlan.All(x => x.Status is
+            ExecutionStatus.Succeeded or
+            ExecutionStatus.Skipped or
+            ExecutionStatus.Collective);
+
+        public bool IsFailing => ExecutionPlan.Any(x => x.Status is
+            ExecutionStatus.Failed or
+            ExecutionStatus.Aborted or
+            ExecutionStatus.NotRun);
+
         public bool IsFinished => !ScheduledTargets.Concat(RunningTargets).Any();
 
         /// <summary>
@@ -173,10 +187,11 @@ namespace Nuke.Common
         /// </summary>
         public int? ExitCode { get; set; }
 
-        public void ReportSummary(string caption, string text)
+        public void ReportSummary(Configure<IDictionary<string, string>> configurator = null)
         {
-            ExecutionPlan.Single(x => x.Status == ExecutionStatus.Running)
-                .SummaryInformation.Add((caption, text));
+            var target = ExecutionPlan.Single(x => x.Status == ExecutionStatus.Running);
+            target.SummaryInformation = configurator.InvokeSafe(new Dictionary<string, string>()).ToDictionary(x => x.Key, x => x.Value);
+            ExecuteExtension<IOnTargetSummaryUpdated>(x => x.OnTargetSummaryUpdated(this, target));
         }
     }
 }

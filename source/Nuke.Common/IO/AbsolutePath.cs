@@ -1,11 +1,13 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using static Nuke.Common.IO.PathConstruction;
@@ -54,7 +56,7 @@ namespace Nuke.Common.IO
             if (path is null)
                 return null;
 
-            ControlFlow.Assert(HasPathRoot(path), $"Path '{path}' must be rooted.");
+            Assert.True(HasPathRoot(path), $"Path '{path}' must be rooted");
             return new AbsolutePath(path);
         }
 
@@ -62,6 +64,9 @@ namespace Nuke.Common.IO
         {
             return path?.ToString();
         }
+
+        public string Name => Path.GetFileName(_path);
+        public string NameWithoutExtension => Path.GetFileNameWithoutExtension(_path);
 
         [CanBeNull]
         public AbsolutePath Parent =>
@@ -72,6 +77,16 @@ namespace Nuke.Common.IO
         public static AbsolutePath operator /(AbsolutePath left, [CanBeNull] string right)
         {
             return new AbsolutePath(Combine(left.NotNull("left != null"), right));
+        }
+
+        public static bool operator ==(AbsolutePath a, AbsolutePath b)
+        {
+            return EqualityComparer<AbsolutePath>.Default.Equals(a, b);
+        }
+
+        public static bool operator !=(AbsolutePath a, AbsolutePath b)
+        {
+            return !EqualityComparer<AbsolutePath>.Default.Equals(a, b);
         }
 
         protected bool Equals(AbsolutePath other)
@@ -98,6 +113,7 @@ namespace Nuke.Common.IO
 
         public override string ToString()
         {
+            // TODO: DoubleQuoteIfNeeded ?
             return _path;
         }
     }

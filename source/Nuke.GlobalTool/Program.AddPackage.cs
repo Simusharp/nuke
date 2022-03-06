@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using JetBrains.Annotations;
 using Nuke.Common;
+using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
@@ -15,22 +16,26 @@ namespace Nuke.GlobalTool
 {
     partial class Program
     {
-        private const string PACKAGE_TYPE_DOWNLOAD = "PackageDownload";
-        private const string PACKAGE_TYPE_REFERENCE = "PackageReference";
+        public const string PACKAGE_TYPE_DOWNLOAD = "PackageDownload";
+        public const string PACKAGE_TYPE_REFERENCE = "PackageReference";
 
         [UsedImplicitly]
         public static int AddPackage(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
         {
+            Telemetry.AddPackage();
+            ProjectModelTasks.Initialize();
+
             var packageId = args.ElementAt(0);
             var packageVersion =
-                (args.ElementAtOrDefault(1) ??
+                (EnvironmentInfo.GetParameter<string>("version") ??
+                 args.ElementAtOrDefault(1) ??
                  NuGetPackageResolver.GetLatestPackageVersion(packageId, includePrereleases: false).GetAwaiter().GetResult() ??
                  NuGetPackageResolver.GetGlobalInstalledPackage(packageId, version: null, packagesConfigFile: null)?.Version.ToString())
                 .NotNull("packageVersion != null");
 
             var configuration = GetConfiguration(buildScript, evaluate: true);
             var buildProjectFile = configuration[BUILD_PROJECT_FILE];
-            Logger.Info($"Installing {packageId}/{packageVersion} to {buildProjectFile} ...");
+            Host.Information($"Installing {packageId}/{packageVersion} to {buildProjectFile} ...");
             AddOrReplacePackage(packageId, packageVersion, PACKAGE_TYPE_DOWNLOAD, buildProjectFile);
             DotNetTasks.DotNet($"restore {buildProjectFile}");
 
@@ -40,7 +45,7 @@ namespace Nuke.GlobalTool
             if (!hasToolsDirectory)
                 AddOrReplacePackage(packageId, packageVersion, PACKAGE_TYPE_REFERENCE, buildProjectFile);
 
-            Logger.Info($"Done installing {packageId}/{packageVersion} to {buildProjectFile}.");
+            Host.Information($"Done installing {packageId}/{packageVersion} to {buildProjectFile}");
             return 0;
         }
 

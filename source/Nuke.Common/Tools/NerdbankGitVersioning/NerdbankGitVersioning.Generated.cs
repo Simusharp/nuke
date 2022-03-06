@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/NerdbankGitVersioning.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/NerdbankGitVersioning/NerdbankGitVersioning.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -35,9 +35,9 @@ namespace Nuke.Common.Tools.NerdbankGitVersioning
         /// <summary>
         ///   <p>For more details, visit the <a href="https://github.com/AArnott/Nerdbank.GitVersioning">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> NerdbankGitVersioning(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> NerdbankGitVersioning(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(NerdbankGitVersioningPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, NerdbankGitVersioningLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(NerdbankGitVersioningPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, NerdbankGitVersioningLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -1593,9 +1593,9 @@ namespace Nuke.Common.Tools.NerdbankGitVersioning
     [TypeConverter(typeof(TypeConverter<NerdbankGitVersioningFormat>))]
     public partial class NerdbankGitVersioningFormat : Enumeration
     {
-        public static NerdbankGitVersioningFormat Text = (NerdbankGitVersioningFormat) "Text";
-        public static NerdbankGitVersioningFormat Json = (NerdbankGitVersioningFormat) "Json";
-        public static explicit operator NerdbankGitVersioningFormat(string value)
+        public static NerdbankGitVersioningFormat text = (NerdbankGitVersioningFormat) "text";
+        public static NerdbankGitVersioningFormat json = (NerdbankGitVersioningFormat) "json";
+        public static implicit operator NerdbankGitVersioningFormat(string value)
         {
             return new NerdbankGitVersioningFormat { Value = value };
         }
@@ -1619,7 +1619,7 @@ namespace Nuke.Common.Tools.NerdbankGitVersioning
         public static NerdbankGitVersioningCISystem Jenkins = (NerdbankGitVersioningCISystem) "Jenkins";
         public static NerdbankGitVersioningCISystem GitLab = (NerdbankGitVersioningCISystem) "GitLab";
         public static NerdbankGitVersioningCISystem Travis = (NerdbankGitVersioningCISystem) "Travis";
-        public static explicit operator NerdbankGitVersioningCISystem(string value)
+        public static implicit operator NerdbankGitVersioningCISystem(string value)
         {
             return new NerdbankGitVersioningCISystem { Value = value };
         }

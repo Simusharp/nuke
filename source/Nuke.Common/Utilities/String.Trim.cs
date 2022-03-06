@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -10,6 +10,17 @@ namespace Nuke.Common.Utilities
 {
     public static partial class StringExtensions
     {
+        [Pure]
+        public static string TrimToOne(this string str, string trim)
+        {
+            while (str.Contains(trim + trim))
+            {
+                str = str.Replace(trim + trim, trim);
+            }
+
+            return str;
+        }
+
         [Pure]
         public static string TrimEnd(this string str, string trim)
         {

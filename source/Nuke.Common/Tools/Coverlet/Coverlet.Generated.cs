@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/Coverlet.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/Coverlet/Coverlet.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -38,9 +38,9 @@ namespace Nuke.Common.Tools.Coverlet
         ///   <p><c>Coverlet</c> is a cross platform code coverage library for .NET Core, with support for line, branch and method coverage.The <c>dotnet test</c> command is used to execute unit tests in a given project. Unit tests are console application projects that have dependencies on the unit test framework (for example, MSTest, NUnit, or xUnit) and the dotnet test runner for the unit testing framework. These are packaged as NuGet packages and are restored as ordinary dependencies for the project.</p>
         ///   <p>For more details, visit the <a href="https://github.com/tonerdo/coverlet/">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> Coverlet(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> Coverlet(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(CoverletPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, CoverletLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(CoverletPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, CoverletLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -1038,7 +1038,7 @@ namespace Nuke.Common.Tools.Coverlet
         public static CoverletOutputFormat opencover = (CoverletOutputFormat) "opencover";
         public static CoverletOutputFormat cobertura = (CoverletOutputFormat) "cobertura";
         public static CoverletOutputFormat teamcity = (CoverletOutputFormat) "teamcity";
-        public static explicit operator CoverletOutputFormat(string value)
+        public static implicit operator CoverletOutputFormat(string value)
         {
             return new CoverletOutputFormat { Value = value };
         }
@@ -1057,7 +1057,7 @@ namespace Nuke.Common.Tools.Coverlet
         public static CoverletThresholdType line = (CoverletThresholdType) "line";
         public static CoverletThresholdType branch = (CoverletThresholdType) "branch";
         public static CoverletThresholdType method = (CoverletThresholdType) "method";
-        public static explicit operator CoverletThresholdType(string value)
+        public static implicit operator CoverletThresholdType(string value)
         {
             return new CoverletThresholdType { Value = value };
         }

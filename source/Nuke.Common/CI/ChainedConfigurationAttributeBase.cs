@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -33,6 +33,8 @@ namespace Nuke.Common.CI
                 invokedTargets.AddRange(additionalInvokedTargets);
             } while (additionalInvokedTargets.Count > 0);
 
+            Assert.True(invokedTargets.Except(new[] { executableTarget }).Count(x => x.PartitionSize != null) == 0,
+                $"Non-entry targets for {executableTarget.Name} cannot define partitions");
             return ExecutionPlanner.GetExecutionPlan(invokedTargets, new[] { executableTarget.Name });
         }
 

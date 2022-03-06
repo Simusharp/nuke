@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -32,7 +32,7 @@ namespace Nuke.GlobalTool
         private static string SessionFile => GlobalTemporaryDirectory / $"nuke-{SessionId}.dat";
 
         [UsedImplicitly]
-        public static int GetNextDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
+        private static int GetNextDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
         {
             var content = File.Exists(SessionFile) ? File.ReadAllLines(SessionFile) : null;
             if (content == null || string.IsNullOrWhiteSpace(content[0]))
@@ -49,12 +49,12 @@ namespace Nuke.GlobalTool
         }
 
         [UsedImplicitly]
-        public static int PopDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
+        private static int PopDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
         {
             var content = File.Exists(SessionFile) ? File.ReadAllLines(SessionFile).ToList() : null;
             if (content == null || content.Count <= 1)
             {
-                Console.Error.WriteLine("No previous directories stored.");
+                Console.Error.WriteLine("No previous directory");
                 return 1;
             }
 
@@ -65,27 +65,25 @@ namespace Nuke.GlobalTool
         }
 
         [UsedImplicitly]
-        public static int PushWithCurrentRootDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
+        private static int PushWithCurrentRootDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
         {
-            return PushAndSetNext(() => rootDirectory.NotNull("No root directory found."));
+            return PushAndSetNext(() => rootDirectory.NotNull("No root directory"));
         }
 
         [UsedImplicitly]
-        public static int PushWithParentRootDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
+        private static int PushWithParentRootDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
         {
-            return PushAndSetNext(() =>
-            {
-                ControlFlow.Assert(rootDirectory != null, "No root directory found.");
-                return TryGetRootDirectoryFrom(Path.GetDirectoryName(rootDirectory)).NotNull("No parent root directory found.");
-            });
+            return PushAndSetNext(() => TryGetRootDirectoryFrom(Path.GetDirectoryName(rootDirectory.NotNull("No root directory")))
+                .NotNull("No parent root directory"));
         }
 
         [UsedImplicitly]
-        public static int PushWithChosenRootDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
+        private static int PushWithChosenRootDirectory(string[] args, [CanBeNull] AbsolutePath rootDirectory, [CanBeNull] AbsolutePath buildScript)
         {
             return PushAndSetNext(() =>
             {
                 var directories = EnvironmentInfo.WorkingDirectory.GlobDirectories($"**/{NukeDirectoryName}")
+                    .Concat(EnvironmentInfo.WorkingDirectory.GlobFiles($"**/{NukeDirectoryName}"))
                     .Where(x => !x.Equals(EnvironmentInfo.WorkingDirectory))
                     .Select(x => x.Parent)
                     .Select(x => (x, EnvironmentInfo.WorkingDirectory.GetRelativePathTo(x).ToString()))

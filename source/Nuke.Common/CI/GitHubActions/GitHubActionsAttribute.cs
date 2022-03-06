@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -25,6 +25,8 @@ namespace Nuke.Common.CI.GitHubActions
     {
         private readonly string _name;
         private readonly GitHubActionsImage[] _images;
+        private GitHubActionsSubmodules? _submodules;
+        private uint? _fetchDepth;
 
         public GitHubActionsAttribute(
             string name,
@@ -54,18 +56,32 @@ namespace Nuke.Common.CI.GitHubActions
         public string[] OnPullRequestTags { get; set; } = new string[0];
         public string[] OnPullRequestIncludePaths { get; set; } = new string[0];
         public string[] OnPullRequestExcludePaths { get; set; } = new string[0];
+        public string[] OnWorkflowDispatchOptionalInputs { get; set; } = new string[0];
+        public string[] OnWorkflowDispatchRequiredInputs { get; set; } = new string[0];
         public string OnCronSchedule { get; set; }
 
         public string[] ImportSecrets { get; set; } = new string[0];
-        public string ImportGitHubTokenAs { get; set; }
 
-        public string[] CacheIncludePatterns { get; set; } = { ".tmp", "~/.nuget/packages" };
+        public string[] CacheIncludePatterns { get; set; } = { ".nuke/temp", "~/.nuget/packages" };
         public string[] CacheExcludePatterns { get; set; } = new string[0];
         public string[] CacheKeyFiles { get; set; } = { "**/global.json", "**/*.csproj" };
 
         public bool PublishArtifacts { get; set; } = true;
+        public bool EnableGitHubContext { get; set; }
 
         public string[] InvokedTargets { get; set; } = new string[0];
+
+        public GitHubActionsSubmodules Submodules
+        {
+            set => _submodules = value;
+            get => throw new NotSupportedException();
+        }
+
+        public uint? FetchDepth
+        {
+            set => _fetchDepth = value;
+            get => throw new NotSupportedException();
+        }
 
         public override CustomFileWriter CreateWriter(StreamWriter streamWriter)
         {
@@ -84,10 +100,10 @@ namespace Nuke.Common.CI.GitHubActions
                                     Jobs = _images.Select(x => GetJobs(x, relevantTargets)).ToArray()
                                 };
 
-            ControlFlow.Assert(configuration.ShortTriggers.Length == 0 || configuration.DetailedTriggers.Length == 0,
-                $"Workflows can only define either shorthand '{On}' or '{On}*' triggers.");
-            ControlFlow.Assert(configuration.ShortTriggers.Length > 0 || configuration.DetailedTriggers.Length > 0,
-                "Workflows must define either shorthand '{On}' or '{On}*' triggers.");
+            Assert.True(configuration.ShortTriggers.Length == 0 || configuration.DetailedTriggers.Length == 0,
+                $"Workflows can only define either shorthand '{On}' or '{On}*' triggers");
+            Assert.True(configuration.ShortTriggers.Length > 0 || configuration.DetailedTriggers.Length > 0,
+                "Workflows must define either shorthand '{On}' or '{On}*' triggers");
 
             return configuration;
         }
@@ -104,9 +120,10 @@ namespace Nuke.Common.CI.GitHubActions
 
         private IEnumerable<GitHubActionsStep> GetSteps(GitHubActionsImage image, IReadOnlyCollection<ExecutableTarget> relevantTargets)
         {
-            yield return new GitHubActionsUsingStep
+            yield return new GitHubActionsCheckoutStep
                          {
-                             Using = "actions/checkout@v1"
+                             Submodules = _submodules,
+                             FetchDepth = _fetchDepth
                          };
 
             if (CacheKeyFiles.Any())
@@ -128,8 +145,8 @@ namespace Nuke.Common.CI.GitHubActions
             if (PublishArtifacts)
             {
                 var artifacts = relevantTargets
-                    .SelectMany(x => ArtifactExtensions.ArtifactProducts[x.Definition])
-                    .Select(x => (AbsolutePath) x)
+                    .SelectMany(x => x.ArtifactProducts)
+                    .Select(x => (AbsolutePath)x)
                     // TODO: https://github.com/actions/upload-artifact/issues/11
                     .Select(x => x.DescendantsAndSelf(y => y.Parent).FirstOrDefault(y => !y.ToString().ContainsOrdinalIgnoreCase("*")))
                     .Distinct().ToList();
@@ -147,14 +164,17 @@ namespace Nuke.Common.CI.GitHubActions
 
         protected virtual IEnumerable<(string Key, string Value)> GetImports()
         {
-            static string GetSecretValue(string secret)
-                => $"${{{{ secrets.{secret.SplitCamelHumpsWithSeparator("_", Constants.KnownWords).ToUpperInvariant()} }}}}";
+            foreach (var input in OnWorkflowDispatchOptionalInputs.Concat(OnWorkflowDispatchRequiredInputs))
+                yield return (input, $"${{{{ github.event.inputs.{input} }}}}");
 
-            if (ImportGitHubTokenAs != null)
-                yield return (ImportGitHubTokenAs, GetSecretValue("GITHUB_TOKEN"));
+            static string GetSecretValue(string secret)
+                => $"${{{{ secrets.{secret.SplitCamelHumpsWithKnownWords().JoinUnderscore().ToUpperInvariant()} }}}}";
 
             foreach (var secret in ImportSecrets)
                 yield return (secret, GetSecretValue(secret));
+
+            if (EnableGitHubContext)
+                yield return ("GITHUB_CONTEXT", "${{ toJSON(github) }}");
         }
 
         protected virtual IEnumerable<GitHubActionsDetailedTrigger> GetTriggers()
@@ -166,7 +186,7 @@ namespace Nuke.Common.CI.GitHubActions
                 OnPushIncludePaths.Length > 0 ||
                 OnPushExcludePaths.Length > 0)
             {
-                ControlFlow.Assert(
+                Assert.True(
                     OnPushBranches.Length == 0 && OnPushTags.Length == 0 || OnPushBranchesIgnore.Length == 0 && OnPushTagsIgnore.Length == 0,
                     $"Cannot use {nameof(OnPushBranches)}/{nameof(OnPushTags)} and {nameof(OnPushBranchesIgnore)}/{nameof(OnPushTagsIgnore)} in combination");
 
@@ -196,6 +216,16 @@ namespace Nuke.Common.CI.GitHubActions
                                  TagsIgnore = new string[0],
                                  IncludePaths = OnPullRequestIncludePaths,
                                  ExcludePaths = OnPullRequestExcludePaths
+                             };
+            }
+
+            if (OnWorkflowDispatchOptionalInputs.Length > 0 ||
+                OnWorkflowDispatchRequiredInputs.Length > 0)
+            {
+                yield return new GitHubActionsWorkflowDispatchTrigger
+                             {
+                                 OptionalInputs = OnWorkflowDispatchOptionalInputs,
+                                 RequiredInputs = OnWorkflowDispatchRequiredInputs
                              };
             }
 

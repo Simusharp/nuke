@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/GitVersion.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/GitVersion/GitVersion.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -37,9 +37,9 @@ namespace Nuke.Common.Tools.GitVersion
         ///   <p>GitVersion is a tool to help you achieve Semantic Versioning on your project.</p>
         ///   <p>For more details, visit the <a href="http://gitversion.readthedocs.io/en/stable/">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> GitVersion(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> GitVersion(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(GitVersionPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, GitVersionLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(GitVersionPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, GitVersionLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -317,7 +317,9 @@ namespace Nuke.Common.Tools.GitVersion
         public virtual string PreReleaseTag { get; internal set; }
         public virtual string PreReleaseTagWithDash { get; internal set; }
         public virtual string PreReleaseLabel { get; internal set; }
+        public virtual string PreReleaseLabelWithDash { get; internal set; }
         public virtual string PreReleaseNumber { get; internal set; }
+        public virtual string WeightedPreReleaseNumber { get; internal set; }
         public virtual string BuildMetaData { get; internal set; }
         public virtual string BuildMetaDataPadded { get; internal set; }
         public virtual string FullBuildMetaData { get; internal set; }
@@ -330,7 +332,9 @@ namespace Nuke.Common.Tools.GitVersion
         public virtual string FullSemVer { get; internal set; }
         public virtual string InformationalVersion { get; internal set; }
         public virtual string BranchName { get; internal set; }
+        public virtual string EscapedBranchName { get; internal set; }
         public virtual string Sha { get; internal set; }
+        public virtual string ShortSha { get; internal set; }
         public virtual string NuGetVersionV2 { get; internal set; }
         public virtual string NuGetVersion { get; internal set; }
         public virtual string NuGetPreReleaseTagV2 { get; internal set; }
@@ -338,6 +342,7 @@ namespace Nuke.Common.Tools.GitVersion
         public virtual string VersionSourceSha { get; internal set; }
         public virtual string CommitsSinceVersionSource { get; internal set; }
         public virtual string CommitsSinceVersionSourcePadded { get; internal set; }
+        public virtual int? UncommittedChanges { get; internal set; }
         public virtual string CommitDate { get; internal set; }
     }
     #endregion
@@ -1003,7 +1008,7 @@ namespace Nuke.Common.Tools.GitVersion
         ///   <p>Password in case authentication is required.</p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : GitVersionSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : GitVersionSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;
@@ -1282,7 +1287,7 @@ namespace Nuke.Common.Tools.GitVersion
     {
         public static GitVersionOutput json = (GitVersionOutput) "json";
         public static GitVersionOutput buildserver = (GitVersionOutput) "buildserver";
-        public static explicit operator GitVersionOutput(string value)
+        public static implicit operator GitVersionOutput(string value)
         {
             return new GitVersionOutput { Value = value };
         }
@@ -1303,7 +1308,7 @@ namespace Nuke.Common.Tools.GitVersion
         public static GitVersionVerbosity warn = (GitVersionVerbosity) "warn";
         public static GitVersionVerbosity error = (GitVersionVerbosity) "error";
         public static GitVersionVerbosity none = (GitVersionVerbosity) "none";
-        public static explicit operator GitVersionVerbosity(string value)
+        public static implicit operator GitVersionVerbosity(string value)
         {
             return new GitVersionVerbosity { Value = value };
         }

@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -56,18 +56,55 @@ namespace Nuke.Common.ProjectModel
             return project.GetItemMetadata(itemGroupName, metadataName).Select(Convert<T>);
         }
 
+        [CanBeNull]
+        public static string GetItemMetadataSingleOrDefault(this Project project, string itemGroupName, string includeName, string metadataName)
+        {
+            var items = project.GetMSBuildProject().GetItems(itemGroupName);
+            return items.SingleOrDefault(x => x.EvaluatedInclude == includeName)?.GetMetadataValue(metadataName);
+        }
+
+        [CanBeNull]
+        public static T GetItemMetadataSingleOrDefault<T>(this Project project, string itemGroupName, string includeName, string metadataName)
+        {
+            return Convert<T>(project.GetItemMetadataSingleOrDefault(itemGroupName, includeName, metadataName));
+        }
+
+        public static bool HasPackageReference(this Project project, string packageId)
+        {
+            return project.GetItems("PackageReference").Contains(packageId);
+        }
+
+        public static string GetPackageReferenceVersion(this Project project, string packageId)
+        {
+            return project.GetItemMetadataSingleOrDefault("PackageReference", packageId, "Version");
+        }
+
+        [CanBeNull]
         public static IReadOnlyCollection<string> GetTargetFrameworks(this Project project)
         {
+            return project.GetSplittedPropertyValue("TargetFramework", "TargetFrameworks");
+        }
+
+        [CanBeNull]
+        public static IReadOnlyCollection<string> GetRuntimeIdentifiers(this Project project)
+        {
+            return project.GetSplittedPropertyValue("RuntimeIdentifier", "RuntimeIdentifiers");
+        }
+
+        [CanBeNull]
+        private static IReadOnlyCollection<string> GetSplittedPropertyValue(
+            this Project project,
+            params string[] names)
+        {
             var msbuildProject = project.GetMSBuildProject();
-            var targetFrameworkProperty = msbuildProject.GetProperty("TargetFramework");
-            if (targetFrameworkProperty != null)
-                return new[] { targetFrameworkProperty.EvaluatedValue };
+            foreach (var name in names)
+            {
+                var property = msbuildProject.GetProperty(name);
+                if (property != null)
+                    return property.EvaluatedValue.Split(';');
+            }
 
-            var targetFrameworksProperty = msbuildProject.GetProperty("TargetFrameworks");
-            if (targetFrameworksProperty != null)
-                return targetFrameworksProperty.EvaluatedValue.Split(';');
-
-            return new string[0];
+            return null;
         }
 
         public static string GetOutputType(this Project project)

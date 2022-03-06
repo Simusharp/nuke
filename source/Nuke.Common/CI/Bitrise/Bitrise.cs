@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -6,7 +6,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
-using Nuke.Common.OutputSinks;
 using Nuke.Common.Utilities;
 
 namespace Nuke.Common.CI.Bitrise
@@ -18,6 +17,8 @@ namespace Nuke.Common.CI.Bitrise
     [ExcludeFromCodeCoverage]
     public class Bitrise : Host, IBuildServer
     {
+        public new static Bitrise Instance => Host.Instance as Bitrise;
+
         internal static bool IsRunningBitrise => !Environment.GetEnvironmentVariable("BITRISE_BUILD_URL").IsNullOrEmpty();
 
         private static DateTime ConvertUnixTimestamp(long timestamp)
@@ -31,8 +32,6 @@ namespace Nuke.Common.CI.Bitrise
         {
         }
 
-        protected internal override OutputSink OutputSink => new BitriseOutputSink();
-
         string IBuildServer.Branch => GitBranch;
         string IBuildServer.Commit => GitCommit;
 
@@ -40,8 +39,8 @@ namespace Nuke.Common.CI.Bitrise
         public long BuildNumber => EnvironmentInfo.GetVariable<long>("BITRISE_BUILD_NUMBER");
         public string AppTitle => EnvironmentInfo.GetVariable<string>("BITRISE_APP_TITLE");
         public string AppUrl => EnvironmentInfo.GetVariable<string>("BITRISE_APP_URL");
-        public string AppSlug => EnvironmentInfo.GetVariable<string>("BITRISE_APP_SLUG");
-        public string BuildSlug => EnvironmentInfo.GetVariable<string>("BITRISE_BUILD_SLUG");
+        [NoConvert] public string AppSlug => EnvironmentInfo.GetVariable<string>("BITRISE_APP_SLUG");
+        [NoConvert] public string BuildSlug => EnvironmentInfo.GetVariable<string>("BITRISE_BUILD_SLUG");
         public DateTime BuildTriggerTimestamp => ConvertUnixTimestamp(EnvironmentInfo.GetVariable<long>("BITRISE_BUILD_TRIGGER_TIMESTAMP"));
         public string RepositoryUrl => EnvironmentInfo.GetVariable<string>("GIT_REPOSITORY_URL");
         public string GitBranch => EnvironmentInfo.GetVariable<string>("BITRISE_GIT_BRANCH");

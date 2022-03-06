@@ -1,4 +1,4 @@
-// Copyright 2020 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -9,7 +9,6 @@ namespace Nuke.Common.Tooling
     partial class SettingsEntityExtensions
     {
         public static T Apply<T>(this T settings, Configure<T> configurator)
-            where T : ISettingsEntity, new()
         {
             return configurator(settings);
         }

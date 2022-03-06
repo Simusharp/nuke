@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -29,7 +29,7 @@ namespace Nuke.Common.CI.GitHubActions.Configuration
                     writer.WriteLine("env:");
                     using (writer.Indent())
                     {
-                        Imports.ForEach(x => writer.WriteLine($"  {x.Key}: {x.Value}"));
+                        Imports.ForEach(x => writer.WriteLine($"{x.Key}: {x.Value}"));
                     }
                 }
             }

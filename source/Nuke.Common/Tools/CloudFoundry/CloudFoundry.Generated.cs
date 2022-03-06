@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/CloudFoundry.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/CloudFoundry/CloudFoundry.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -37,9 +37,9 @@ namespace Nuke.Common.Tools.CloudFoundry
         ///   <p>Cloud Foundry CLI is the official command line client for Cloud Foundry</p>
         ///   <p>For more details, visit the <a href="https://docs.cloudfoundry.org/cf-cli/cf-help.html">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> CloudFoundry(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> CloudFoundry(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(CloudFoundryPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, CloudFoundryLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(CloudFoundryPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, CloudFoundryLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -3038,7 +3038,7 @@ namespace Nuke.Common.Tools.CloudFoundry
         ///   <p><em>Sets <see cref="CloudFoundryLoginSettings.Password"/></em></p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : CloudFoundryLoginSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : CloudFoundryLoginSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;
@@ -3217,7 +3217,7 @@ namespace Nuke.Common.Tools.CloudFoundry
         ///   <p><em>Sets <see cref="CloudFoundryAuthSettings.Password"/></em></p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : CloudFoundryAuthSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : CloudFoundryAuthSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;
@@ -5242,7 +5242,7 @@ namespace Nuke.Common.Tools.CloudFoundry
         public static HealthCheckType Process = (HealthCheckType) "Process";
         public static HealthCheckType Port = (HealthCheckType) "Port";
         public static HealthCheckType Http = (HealthCheckType) "Http";
-        public static explicit operator HealthCheckType(string value)
+        public static implicit operator HealthCheckType(string value)
         {
             return new HealthCheckType { Value = value };
         }
@@ -5263,7 +5263,7 @@ namespace Nuke.Common.Tools.CloudFoundry
         public static Stack windows = (Stack) "windows";
         public static Stack windows2012R2 = (Stack) "windows2012R2";
         public static Stack windows2016 = (Stack) "windows2016";
-        public static explicit operator Stack(string value)
+        public static implicit operator Stack(string value)
         {
             return new Stack { Value = value };
         }

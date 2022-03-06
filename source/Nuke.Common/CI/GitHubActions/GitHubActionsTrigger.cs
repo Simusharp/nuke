@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -13,6 +13,7 @@ namespace Nuke.Common.CI.GitHubActions
     public enum GitHubActionsTrigger
     {
         [EnumValue("push")] Push,
-        [EnumValue("pull_request")] PullRequest
+        [EnumValue("pull_request")] PullRequest,
+        [EnumValue("workflow_dispatch")] WorkflowDispatch
     }
 }

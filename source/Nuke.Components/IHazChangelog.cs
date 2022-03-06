@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -15,9 +15,6 @@ namespace Nuke.Components
     {
         // TODO: assert file exists
         string ChangelogFile => RootDirectory / "CHANGELOG.md";
-
-        string NuGetReleaseNotes => GetNuGetReleaseNotes(
-            ChangelogFile,
-            (this as IHazGitRepository)?.GitRepository);
+        string NuGetReleaseNotes => GetNuGetReleaseNotes(ChangelogFile, (this as IHazGitRepository)?.GitRepository);
     }
 }

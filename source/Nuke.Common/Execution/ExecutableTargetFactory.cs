@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -27,8 +27,7 @@ namespace Nuke.Common.Execution
             var targetProperties = GetTargetProperties(build.GetType()).ToList();
             var defaultTargets = defaultTargetExpressions.Select(x => x.Compile().Invoke(build)).ToList();
 
-            var executables = new List<ExecutableTarget>();
-            foreach (var property in targetProperties)
+            ExecutableTarget Create(PropertyInfo property)
             {
                 var baseMembers = buildType
                     .Descendants(x => x.BaseType)
@@ -40,7 +39,7 @@ namespace Nuke.Common.Execution
                 var factory = (Target) property.GetValue(build);
                 factory.Invoke(definition);
 
-                var target = new ExecutableTarget
+                return new ExecutableTarget
                              {
                                  Name = property.GetDisplayShortName(),
                                  Member = property,
@@ -55,36 +54,46 @@ namespace Nuke.Common.Execution
                                  AssuredAfterFailure = definition.IsAssuredAfterFailure,
                                  Requirements = definition.Requirements,
                                  Actions = definition.Actions,
-                                 Listed = !definition.IsInternal
+                                 Listed = !definition.IsInternal,
+                                 PartitionSize = definition.PartitionSize,
+                                 ArtifactProducts = definition.ArtifactProducts
                              };
-
-                executables.Add(target);
             }
 
-            foreach (var executable in executables)
-            {
-                IEnumerable<ExecutableTarget> GetDependencies(
-                    Func<TargetDefinition, IReadOnlyList<Target>> directDependenciesSelector,
-                    Func<TargetDefinition, IReadOnlyList<Target>> indirectDependenciesSelector)
-                {
-                    foreach (var factoryDependency in directDependenciesSelector(executable.Definition))
-                        yield return executables.Single(x => x.Factory == factoryDependency);
-
-                    foreach (var otherExecutables in executables.Where(x => x != executable))
-                    {
-                        var otherDependencies = indirectDependenciesSelector(otherExecutables.Definition);
-                        if (otherDependencies.Any(x => x == executable.Factory))
-                            yield return otherExecutables;
-                    }
-                }
-
-                executable.ExecutionDependencies.AddRange(GetDependencies(x => x.DependsOnTargets, x => x.DependentForTargets));
-                executable.OrderDependencies.AddRange(GetDependencies(x => x.AfterTargets, x => x.BeforeTargets));
-                executable.TriggerDependencies.AddRange(GetDependencies(x => x.TriggeredByTargets, x => x.TriggersTargets));
-                executable.Triggers.AddRange(GetDependencies(x => x.TriggersTargets, x => x.TriggeredByTargets));
-            }
+            var executables = targetProperties.Select(Create).ToList();
+            executables.ForEach(x => ApplyDependencies(x, executables));
 
             return executables;
+        }
+
+        private static void ApplyDependencies(ExecutableTarget executable, IReadOnlyCollection<ExecutableTarget> executables)
+        {
+            IEnumerable<ExecutableTarget> GetDependencies(
+                Func<TargetDefinition, IReadOnlyList<Target>> directDependenciesSelector,
+                Func<TargetDefinition, IReadOnlyList<Target>> indirectDependenciesSelector)
+            {
+                foreach (var factoryDependency in directDependenciesSelector(executable.Definition))
+                    yield return executables.Single(x => x.Factory == factoryDependency);
+
+                foreach (var otherExecutables in executables.Where(x => x != executable))
+                {
+                    var otherDependencies = indirectDependenciesSelector(otherExecutables.Definition);
+                    if (otherDependencies.Any(x => x == executable.Factory))
+                        yield return otherExecutables;
+                }
+            }
+
+            executable.ExecutionDependencies.AddRange(GetDependencies(x => x.DependsOnTargets, x => x.DependentForTargets));
+            executable.OrderDependencies.AddRange(GetDependencies(x => x.AfterTargets, x => x.BeforeTargets));
+            executable.TriggerDependencies.AddRange(GetDependencies(x => x.TriggeredByTargets, x => x.TriggersTargets));
+            executable.Triggers.AddRange(GetDependencies(x => x.TriggersTargets, x => x.TriggeredByTargets));
+
+            foreach (var artifactDependency in executable.Definition.ArtifactDependencies)
+            {
+                var dependency = executables.Single(x => x.Factory == artifactDependency.Key);
+                foreach (var artifacts in artifactDependency)
+                    executable.ArtifactDependencies.AddRange(dependency, artifacts.Length > 0 ? artifacts : dependency.ArtifactProducts);
+            }
         }
 
 
@@ -93,7 +102,9 @@ namespace Nuke.Common.Execution
             // TODO: static targets?
             return buildType.GetAllMembers(
                 x => x is PropertyInfo property && property.PropertyType == typeof(Target),
-                ReflectionUtility.Instance).Cast<PropertyInfo>();
+                bindingFlags: ReflectionUtility.Instance,
+                allowAmbiguity: false,
+                filterQuasiOverridden: true).Cast<PropertyInfo>();
         }
     }
 }

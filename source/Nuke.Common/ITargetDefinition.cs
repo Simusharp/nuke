@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -187,6 +187,42 @@ namespace Nuke.Common
         ///   Inherits target definition.
         /// </summary>
         ITargetDefinition Inherit<T>(params Expression<Func<T, Target>>[] targets);
+
+        /// <summary>
+        ///   Defines produced artifacts.
+        /// </summary>
+        ITargetDefinition Produces(params string[] artifacts);
+
+        /// <summary>
+        ///   Defines which targets artifacts are consumed.
+        /// </summary>
+        ITargetDefinition Consumes(params Target[] targets);
+
+        /// <summary>
+        ///   Defines which targets artifacts are consumed.
+        /// </summary>
+        ITargetDefinition Consumes<T>(params Func<T, Target>[] targets);
+
+        /// <summary>
+        ///   Defines which targets artifacts are consumed.
+        /// </summary>
+        ITargetDefinition Consumes(Target target, params string[] artifacts);
+
+        /// <summary>
+        ///   Defines which targets artifacts are consumed.
+        /// </summary>
+        ITargetDefinition Consumes<T>(Func<T, Target> target, params string[] artifacts);
+
+        /// <summary>
+        ///   Defines which targets artifacts are consumed.
+        /// </summary>
+        ITargetDefinition Consumes<T>(params string[] artifacts);
+
+
+        /// <summary>
+        ///   Defines the partition size. Default is <c>1</c>.
+        /// </summary>
+        ITargetDefinition Partition(int size);
     }
 
     /// <summary>
@@ -195,13 +231,13 @@ namespace Nuke.Common
     public enum DependencyBehavior
     {
         /// <summary>
-        /// Execute all dependencies.
-        /// </summary>
-        Execute,
-
-        /// <summary>
         /// Skip all dependencies which are not required by another target.
         /// </summary>
-        Skip
+        Skip,
+
+        /// <summary>
+        /// Execute all dependencies.
+        /// </summary>
+        Execute
     }
 }

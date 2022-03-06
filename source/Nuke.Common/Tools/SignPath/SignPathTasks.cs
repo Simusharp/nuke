@@ -1,4 +1,4 @@
-// Copyright 2020 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -15,20 +15,15 @@ using Newtonsoft.Json.Linq;
 using Nuke.Common.CI.AppVeyor;
 using Nuke.Common.IO;
 using Nuke.Common.Utilities;
+using Serilog;
 using static Nuke.Common.ControlFlow;
 using static Nuke.Common.IO.SerializationTasks;
 
 namespace Nuke.Common.Tools.SignPath
 {
     [PublicAPI]
-    public class SignPathTasks
+    public static class SignPathTasks
     {
-        private const int ServiceUnavailableRetryTimeout = 3;
-        private const int WaitForCompletionRetryTimeout = 5;
-        private const int WaitForCompletionRetryAttempts = 100;
-        private const int DefaultHttpClientTimeout = 15;
-        private const int UploadAndDownloadRequestTimeout = 15;
-
         private class SigningRequestStatus
         {
             public const string Completed = nameof(Completed);
@@ -41,6 +36,11 @@ namespace Nuke.Common.Tools.SignPath
         }
 
         public static string SignPathApiUrl => "https://app.signpath.io/api/v1";
+        public static TimeSpan ServiceUnavailableRetryTimeoutInSeconds = TimeSpan.FromSeconds(3);
+        public static TimeSpan DefaultHttpClientTimeout = TimeSpan.FromSeconds(15);
+        public static TimeSpan UploadAndDownloadRequestTimeout = TimeSpan.FromSeconds(15);
+        public static TimeSpan WaitForCompletionRetryTimeout = TimeSpan.FromSeconds(5);
+        public static int WaitForCompletionRetryAttempts = 100;
 
         public static string GetSigningRequestUrl(string organizationId, string signingRequestId)
         {
@@ -74,9 +74,9 @@ namespace Nuke.Common.Tools.SignPath
                 var response = await httpClient.PostAsync(
                     GetSignPathAppVeyorIntegrationUrl(organizationId, projectSlug, signingPolicySlug),
                     new StringContent(JsonSerialize(content), Encoding.UTF8, contentType));
-                Assert(response.StatusCode == HttpStatusCode.Created, response.Content.ReadAsStringAsync().GetAwaiter().GetResult());
+                response.AssertStatusCode(HttpStatusCode.Created);
 
-                Logger.Info($"Signing request created: {response.Headers.Location.AbsoluteUri.Replace("api/v1", "Web")}");
+                Log.Information("Signing request created: {Url}", response.Headers.Location.AbsoluteUri.Replace("api/v1", "Web"));
                 return response.Headers.Location.AbsoluteUri;
             }
         }
@@ -129,17 +129,16 @@ namespace Nuke.Common.Tools.SignPath
             {
                 var defaultHttpClient = CreateAuthorizedHttpClient(apiToken, DefaultHttpClientTimeout);
                 var downloadUrl = GetSignedArtifactUrl(defaultHttpClient, signingRequestUrl);
-                Logger.Info($"Signed artifact is available: {downloadUrl}");
+                Log.Information("Signed artifact is available: {DownloadUrl}", downloadUrl);
 
                 var downloadHttpClient = CreateAuthorizedHttpClient(apiToken, UploadAndDownloadRequestTimeout);
                 using var response = SendGetRequestWithRetry(downloadHttpClient, downloadUrl);
-                Assert(response.StatusCode == HttpStatusCode.OK, $"{response.StatusCode} == HttpStatusCode.OK");
                 var downloadStream = await response.Content.ReadAsStreamAsync();
 
                 FileSystemTasks.EnsureExistingParentDirectory(outputPath);
                 using var fileStream = File.Open(outputPath, FileMode.Create);
                 await downloadStream.CopyToAsync(fileStream);
-                Logger.Info($"Signed artifact downloaded to: {outputPath}");
+                Log.Information("Signed artifact downloaded to: {OutputPath}", outputPath);
             }
         }
 
@@ -163,9 +162,9 @@ namespace Nuke.Common.Tools.SignPath
                         _ => throw new Exception(signingRequestStatus)
                     };
                 },
-                waitInSeconds: WaitForCompletionRetryTimeout,
+                delay: WaitForCompletionRetryTimeout,
                 retryAttempts: WaitForCompletionRetryAttempts,
-                logAction: Logger.Normal);
+                logAction: Log.Debug);
 
             return signedArtifactUrl.NotNull($"Signing Request {signingRequestStatus}");
         }
@@ -178,11 +177,11 @@ namespace Nuke.Common.Tools.SignPath
                 () => ServicePointManager.SecurityProtocol = previousProtocol);
         }
 
-        private static HttpClient CreateAuthorizedHttpClient(string apiToken, int timeout)
+        private static HttpClient CreateAuthorizedHttpClient(string apiToken, TimeSpan timeout)
         {
             return new HttpClient
                    {
-                       Timeout = TimeSpan.FromSeconds(timeout),
+                       Timeout = timeout,
                        DefaultRequestHeaders =
                        {
                            Authorization = new AuthenticationHeaderValue("Bearer", apiToken)
@@ -200,17 +199,16 @@ namespace Nuke.Common.Tools.SignPath
                 () =>
                 {
                     var request = requestFactory.Invoke();
-                    response = httpClient.SendAsync(request).GetAwaiter().GetResult();
-                    Assert(response.StatusCode == expectedStatusCode, $"{response.StatusCode} == {expectedStatusCode}");
+                    response = httpClient.SendAsync(request).GetAwaiter().GetResult().AssertStatusCode(expectedStatusCode);
                 },
-                waitInSeconds: ServiceUnavailableRetryTimeout,
-                logAction: Logger.Normal);
+                delay: ServiceUnavailableRetryTimeoutInSeconds,
+                logAction: Log.Debug);
             return response;
         }
 
         private static HttpResponseMessage SendGetRequestWithRetry(HttpClient httpClient, string url)
         {
-            return SendRequestWithRetry(httpClient, () => new HttpRequestMessage(HttpMethod.Get, url), HttpStatusCode.OK);
+            return SendRequestWithRetry(httpClient, () => new HttpRequestMessage(HttpMethod.Get, url), expectedStatusCode: HttpStatusCode.OK);
         }
 
         private static string SubmitVia(
@@ -255,6 +253,18 @@ namespace Nuke.Common.Tools.SignPath
 
             var response = SendRequestWithRetry(httpClient, CreateHttpRequest, HttpStatusCode.Created);
             return response.Headers.Location.AbsoluteUri;
+        }
+
+        private static HttpResponseMessage AssertStatusCode(this HttpResponseMessage response, HttpStatusCode statusCode)
+        {
+            if (response.StatusCode != statusCode)
+            {
+                var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var jobject = JsonDeserialize<JObject>(content);
+                Assert.Fail($"[{response.StatusCode}] {jobject.GetChildren<JValue>("").Select(x => x.Value<string>()).JoinNewLine()}");
+            }
+
+            return response;
         }
     }
 }

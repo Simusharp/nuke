@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -20,6 +20,8 @@ namespace Nuke.Common.Tests
         {
             var rootDirectory = (AbsolutePath) Directory.GetCurrentDirectory() / ".." / ".." / ".." / ".." / "..";
             var repository = GitRepository.FromLocalDirectory(rootDirectory).NotNull();
+            if (!repository.IsGitHubRepository())
+                return;
 
             var rawUrl = $"https://raw.githubusercontent.com/{repository.Identifier}/{repository.Branch}";
             var blobUrl = $"https://github.com/{repository.Identifier}/blob/{repository.Branch}";
@@ -36,6 +38,8 @@ namespace Nuke.Common.Tests
 
             repository.GetGitHubBrowseUrl("directory", itemType: GitHubItemType.Directory).Should().Be($"{treeUrl}/directory");
             repository.GetGitHubBrowseUrl("dir/file", itemType: GitHubItemType.File).Should().Be($"{blobUrl}/dir/file");
+
+            repository.GetGitHubBrowseUrl(branch: repository.Branch).Should().Be(treeUrl);
         }
 
         [Fact]

@@ -1,5 +1,5 @@
 #pragma warning disable CS1574
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/NSwag.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/NSwag/NSwag.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -38,9 +38,9 @@ namespace Nuke.Common.Tools.NSwag
         ///   <p>The project combines the functionality of Swashbuckle (Swagger generation) and AutoRest (client generation) in one toolchain. This way a lot of incompatibilites can be avoided and features which are not well described by the Swagger specification or JSON Schema are better supported (e.g. <a href="https://github.com/NJsonSchema/NJsonSchema/wiki/Inheritance">inheritance</a>, <a href="https://github.com/NJsonSchema/NJsonSchema/wiki/Enums">enum</a> and reference handling). The NSwag project heavily uses <a href="http://njsonschema.org/">NJsonSchema for .NET</a> for JSON Schema handling and C#/TypeScript class/interface generation.</p>
         ///   <p>For more details, visit the <a href="https://github.com/RSuter/NSwag">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> NSwag(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> NSwag(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(NSwagPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, NSwagLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(NSwagPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, NSwagLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -28595,7 +28595,7 @@ namespace Nuke.Common.Tools.NSwag
         public static SchemaType JsonSchema = (SchemaType) "JsonSchema";
         public static SchemaType Swagger2 = (SchemaType) "Swagger2";
         public static SchemaType OpenApi3 = (SchemaType) "OpenApi3";
-        public static explicit operator SchemaType(string value)
+        public static implicit operator SchemaType(string value)
         {
             return new SchemaType { Value = value };
         }
@@ -28614,7 +28614,7 @@ namespace Nuke.Common.Tools.NSwag
         public static PropertyNameHandling Default = (PropertyNameHandling) "Default";
         public static PropertyNameHandling CamelCase = (PropertyNameHandling) "CamelCase";
         public static PropertyNameHandling SnakeCase = (PropertyNameHandling) "SnakeCase";
-        public static explicit operator PropertyNameHandling(string value)
+        public static implicit operator PropertyNameHandling(string value)
         {
             return new PropertyNameHandling { Value = value };
         }
@@ -28632,7 +28632,7 @@ namespace Nuke.Common.Tools.NSwag
     {
         public static ReferenceTypeNullHandling Null = (ReferenceTypeNullHandling) "Null";
         public static ReferenceTypeNullHandling NotNull = (ReferenceTypeNullHandling) "NotNull";
-        public static explicit operator ReferenceTypeNullHandling(string value)
+        public static implicit operator ReferenceTypeNullHandling(string value)
         {
             return new ReferenceTypeNullHandling { Value = value };
         }
@@ -28651,7 +28651,7 @@ namespace Nuke.Common.Tools.NSwag
         public static EnumHandling Integer = (EnumHandling) "Integer";
         public static EnumHandling String = (EnumHandling) "String";
         public static EnumHandling CamelCaseString = (EnumHandling) "CamelCaseString";
-        public static explicit operator EnumHandling(string value)
+        public static implicit operator EnumHandling(string value)
         {
             return new EnumHandling { Value = value };
         }
@@ -28673,7 +28673,7 @@ namespace Nuke.Common.Tools.NSwag
         public static OperationGenerationMode MultipleClientsFromFirstTagAndOperationId = (OperationGenerationMode) "MultipleClientsFromFirstTagAndOperationId";
         public static OperationGenerationMode SingleClientFromOperationId = (OperationGenerationMode) "SingleClientFromOperationId";
         public static OperationGenerationMode SingleClientFromPathSegments = (OperationGenerationMode) "SingleClientFromPathSegments";
-        public static explicit operator OperationGenerationMode(string value)
+        public static implicit operator OperationGenerationMode(string value)
         {
             return new OperationGenerationMode { Value = value };
         }
@@ -28693,7 +28693,7 @@ namespace Nuke.Common.Tools.NSwag
         public static CSharpClassStyle Inpc = (CSharpClassStyle) "Inpc";
         public static CSharpClassStyle Prism = (CSharpClassStyle) "Prism";
         public static CSharpClassStyle Record = (CSharpClassStyle) "Record";
-        public static explicit operator CSharpClassStyle(string value)
+        public static implicit operator CSharpClassStyle(string value)
         {
             return new CSharpClassStyle { Value = value };
         }
@@ -28711,7 +28711,7 @@ namespace Nuke.Common.Tools.NSwag
     {
         public static CSharpControllerStyle Partial = (CSharpControllerStyle) "Partial";
         public static CSharpControllerStyle Abstract = (CSharpControllerStyle) "Abstract";
-        public static explicit operator CSharpControllerStyle(string value)
+        public static implicit operator CSharpControllerStyle(string value)
         {
             return new CSharpControllerStyle { Value = value };
         }
@@ -28729,7 +28729,7 @@ namespace Nuke.Common.Tools.NSwag
     {
         public static CSharpControllerTarget AspNet = (CSharpControllerTarget) "AspNet";
         public static CSharpControllerTarget AspNetCore = (CSharpControllerTarget) "AspNetCore";
-        public static explicit operator CSharpControllerTarget(string value)
+        public static implicit operator CSharpControllerTarget(string value)
         {
             return new CSharpControllerTarget { Value = value };
         }
@@ -28747,7 +28747,7 @@ namespace Nuke.Common.Tools.NSwag
     {
         public static CSharpControllerRouteNamingStrategy None = (CSharpControllerRouteNamingStrategy) "None";
         public static CSharpControllerRouteNamingStrategy OperationId = (CSharpControllerRouteNamingStrategy) "OperationId";
-        public static explicit operator CSharpControllerRouteNamingStrategy(string value)
+        public static implicit operator CSharpControllerRouteNamingStrategy(string value)
         {
             return new CSharpControllerRouteNamingStrategy { Value = value };
         }
@@ -28770,7 +28770,7 @@ namespace Nuke.Common.Tools.NSwag
         public static TypeScriptTemplate Fetch = (TypeScriptTemplate) "Fetch";
         public static TypeScriptTemplate Aurelia = (TypeScriptTemplate) "Aurelia";
         public static TypeScriptTemplate Axios = (TypeScriptTemplate) "Axios";
-        public static explicit operator TypeScriptTemplate(string value)
+        public static implicit operator TypeScriptTemplate(string value)
         {
             return new TypeScriptTemplate { Value = value };
         }
@@ -28788,7 +28788,7 @@ namespace Nuke.Common.Tools.NSwag
     {
         public static PromiseType Promise = (PromiseType) "Promise";
         public static PromiseType QPromise = (PromiseType) "QPromise";
-        public static explicit operator PromiseType(string value)
+        public static implicit operator PromiseType(string value)
         {
             return new PromiseType { Value = value };
         }
@@ -28806,7 +28806,7 @@ namespace Nuke.Common.Tools.NSwag
     {
         public static HttpClass Http = (HttpClass) "Http";
         public static HttpClass HttpClient = (HttpClass) "HttpClient";
-        public static explicit operator HttpClass(string value)
+        public static implicit operator HttpClass(string value)
         {
             return new HttpClass { Value = value };
         }
@@ -28824,7 +28824,7 @@ namespace Nuke.Common.Tools.NSwag
     {
         public static InjectionTokenType OpaqueToken = (InjectionTokenType) "OpaqueToken";
         public static InjectionTokenType InjectionToken = (InjectionTokenType) "InjectionToken";
-        public static explicit operator InjectionTokenType(string value)
+        public static implicit operator InjectionTokenType(string value)
         {
             return new InjectionTokenType { Value = value };
         }
@@ -28844,7 +28844,7 @@ namespace Nuke.Common.Tools.NSwag
         public static TypeScriptDateTimeType MomentJS = (TypeScriptDateTimeType) "MomentJS";
         public static TypeScriptDateTimeType String = (TypeScriptDateTimeType) "String";
         public static TypeScriptDateTimeType OffsetMomentJS = (TypeScriptDateTimeType) "OffsetMomentJS";
-        public static explicit operator TypeScriptDateTimeType(string value)
+        public static implicit operator TypeScriptDateTimeType(string value)
         {
             return new TypeScriptDateTimeType { Value = value };
         }
@@ -28862,7 +28862,7 @@ namespace Nuke.Common.Tools.NSwag
     {
         public static TypeScriptNullValue Null = (TypeScriptNullValue) "Null";
         public static TypeScriptNullValue Undefined = (TypeScriptNullValue) "Undefined";
-        public static explicit operator TypeScriptNullValue(string value)
+        public static implicit operator TypeScriptNullValue(string value)
         {
             return new TypeScriptNullValue { Value = value };
         }
@@ -28881,7 +28881,7 @@ namespace Nuke.Common.Tools.NSwag
         public static TypeScriptTypeStyle Interface = (TypeScriptTypeStyle) "Interface";
         public static TypeScriptTypeStyle Class = (TypeScriptTypeStyle) "Class";
         public static TypeScriptTypeStyle KnockoutClass = (TypeScriptTypeStyle) "KnockoutClass";
-        public static explicit operator TypeScriptTypeStyle(string value)
+        public static implicit operator TypeScriptTypeStyle(string value)
         {
             return new TypeScriptTypeStyle { Value = value };
         }

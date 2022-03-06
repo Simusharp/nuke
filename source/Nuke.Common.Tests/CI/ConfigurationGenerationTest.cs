@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -16,7 +16,6 @@ using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using VerifyXunit;
-using VerifyTests;
 using Xunit;
 
 namespace Nuke.Common.Tests.CI
@@ -48,6 +47,8 @@ namespace Nuke.Common.Tests.CI
             return TestBuild.GetAttributes().Select(x => new object[] { x.TestName, x.Generator });
         }
 
+        [AppVeyorSecret("GitHubToken", "encrypted-yaml")]
+        [TeamCityToken("GitHubToken", "74928d76-46e8-45cc-ad22-6438915ac070")]
         public class TestBuild : NukeBuild
         {
             public static IEnumerable<(string TestName, IConfigurationGenerator Generator)> GetAttributes()
@@ -64,7 +65,8 @@ namespace Nuke.Common.Tests.CI
                         ManuallyTriggeredTargets = new[] { nameof(Publish) },
                         NightlyTriggeredTargets = new[] { nameof(Publish) },
                         NightlyTriggerBranchFilters = new[] { "nightly_branch_filter" },
-                        VcsTriggerBranchFilters = new[] { "vcs_branch_filter" }
+                        VcsTriggerBranchFilters = new[] { "vcs_branch_filter" },
+                        ImportSecrets = new[] { "GitHubToken", "ManualToken" }
                     }
                 );
 
@@ -78,16 +80,20 @@ namespace Nuke.Common.Tests.CI
                         NonEntryTargets = new[] { nameof(Clean) },
                         InvokedTargets = new[] { nameof(Test) },
                         ExcludedTargets = new[] { nameof(Pack) },
-                        ImportSystemAccessTokenAs = nameof(AzurePipelinesSystemAccessToken),
+                        EnableAccessToken = true,
                         ImportVariableGroups = new[] { "variable-group-1" },
-                        ImportSecrets = new[] { nameof(GitHubToken) },
+                        ImportSecrets = new[] { nameof(ApiKey) },
                         TriggerBatch = true,
                         TriggerBranchesInclude = new[] { "included_branch" },
                         TriggerBranchesExclude = new[] { "excluded_branch" },
                         TriggerPathsInclude = new[] { "included_path" },
                         TriggerPathsExclude = new[] { "excluded_path" },
                         TriggerTagsInclude = new[] { "included_tags" },
-                        TriggerTagsExclude = new[] { "excluded_tags" }
+                        TriggerTagsExclude = new[] { "excluded_tags" },
+                        Submodules = true,
+                        LargeFileStorage = false,
+                        Clean = true,
+                        FetchDepth = 1
                     }
                 );
 
@@ -96,13 +102,15 @@ namespace Nuke.Common.Tests.CI
                     null,
                     new TestAppVeyorAttribute(
                         AppVeyorImage.UbuntuLatest,
-                        AppVeyorImage.VisualStudioLatest)
+                        AppVeyorImage.VisualStudio2022)
                     {
                         InvokedTargets = new[] { nameof(Test) },
                         BranchesOnly = new[] { "only_branch" },
                         BranchesExcept = new[] { "except_branch" },
                         SkipTags = true,
-                        SkipBranchesWithPullRequest = true
+                        SkipBranchesWithPullRequest = true,
+                        Submodules = true,
+                        Secrets = new[] { "GitHubToken" }
                     }
                 );
 
@@ -117,7 +125,7 @@ namespace Nuke.Common.Tests.CI
                         On = new[] { GitHubActionsTrigger.Push, GitHubActionsTrigger.PullRequest },
                         InvokedTargets = new[] { nameof(Test) },
                         ImportSecrets = new[] { nameof(ApiKey) },
-                        ImportGitHubTokenAs = nameof(GitHubToken),
+                        EnableGitHubContext = true
                     }
                 );
 
@@ -132,13 +140,17 @@ namespace Nuke.Common.Tests.CI
                         InvokedTargets = new[] { nameof(Test) },
                         OnCronSchedule = "* 0 * * *",
                         OnPushBranches = new[] { "push_branch" },
-                        OnPushTags = new[] { "push_tag" },
+                        OnPushTags = new[] { "push_tag/*" },
                         OnPushIncludePaths = new[] { "push_include_path" },
                         OnPushExcludePaths = new[] { "push_exclude_path" },
                         OnPullRequestBranches = new[] { "pull_request_branch" },
                         OnPullRequestTags = new[] { "pull_request_tag" },
                         OnPullRequestIncludePaths = new[] { "pull_request_include_path" },
-                        OnPullRequestExcludePaths = new[] { "pull_request_exclude_path" },
+                        OnPullRequestExcludePaths = new[] { "pull_request_exclude_path/**" },
+                        OnWorkflowDispatchOptionalInputs = new[] { "OptionalInput" },
+                        OnWorkflowDispatchRequiredInputs = new[] { "RequiredInput" },
+                        Submodules = GitHubActionsSubmodules.Recursive,
+                        FetchDepth = 2
                     }
                 );
 
@@ -148,8 +160,9 @@ namespace Nuke.Common.Tests.CI
                     new TestSpaceAutomationAttribute("Name", "mcr.microsoft.com/dotnet/sdk:5.0")
                     {
                         InvokedTargets = new[] { nameof(Test) },
-                        ResourcesCpu = 2048,
-                        ResourcesMemory = 4096,
+                        VolumeSize = "10.gb",
+                        ResourcesCpu = "1.cpu",
+                        ResourcesMemory = "2000.mb",
                         OnPush = true,
                         OnPushBranchIncludes = new[] { "refs/heads/include" },
                         OnPushBranchExcludes = new[] { "refs/heads/exclude" },
@@ -158,6 +171,8 @@ namespace Nuke.Common.Tests.CI
                         OnPushPathIncludes = new[] { "include-path" },
                         OnPushPathExcludes = new[] { "exclude-path" },
                         OnCronSchedule = "* 0 * * *",
+                        ImportSecrets = new[] { "GitHubToken" },
+                        TimeoutInMinutes = 15
                     }
                 );
             }
@@ -192,14 +207,13 @@ namespace Nuke.Common.Tests.CI
                 .Consumes(Restore, Compile)
                 .Produces(PackageDirectory / "*.nupkg");
 
-            [Partition(2)] public readonly Partition TestPartition;
             public AbsolutePath TestResultDirectory => OutputDirectory / "test-results";
 
             public Target Test => _ => _
                 .DependsOn(Compile)
                 .Produces(TestResultDirectory / "*.trx")
                 .Produces(TestResultDirectory / "*.xml")
-                .Partition(() => TestPartition);
+                .Partition(2);
 
             public string CoverageReportArchive => OutputDirectory / "coverage-report.zip";
 
@@ -213,11 +227,6 @@ namespace Nuke.Common.Tests.CI
 
             [Parameter("NuGet Source for Packages")]
             public readonly string Source = "https://api.nuget.org/v3/index.json";
-
-            [Parameter("GitHub Token")] public readonly string GitHubToken;
-
-            [Parameter("Azure Pipelines System Access Token")]
-            public readonly string AzurePipelinesSystemAccessToken;
 
             public Target Publish => _ => _
                 .DependsOn(Clean, Test, Pack)

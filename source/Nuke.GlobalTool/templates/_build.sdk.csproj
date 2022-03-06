@@ -7,11 +7,12 @@
     <NoWarn>CS0649;CS0169</NoWarn>
     <NukeRootDirectory>_ROOT_DIRECTORY_</NukeRootDirectory>
     <NukeScriptDirectory>_SCRIPT_DIRECTORY_</NukeScriptDirectory>
+    <NukeTelemetryVersion>_TELEMETRY_VERSION_</NukeTelemetryVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Nuke.Common" Version="_NUKE_VERSION_" />
-    <PackageDownload Include="GitVersion.Tool" Version="[5.5.1]" />    // GITVERSION
+    <PackageDownload Include="GitVersion.Tool" Version="[5.8.0]" />    // GITVERSION
   </ItemGroup>
 
 </Project>

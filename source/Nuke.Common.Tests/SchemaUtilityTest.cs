@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -62,16 +62,19 @@ namespace Nuke.Common.Tests
   }
 }
 ");
-            var items = SchemaUtility.GetCompletionItemsForBuildSchema(schema);
+            var profileNames = new[] { "dev" };
+            var items = SchemaUtility.GetCompletionItems(schema, profileNames);
             items.Should().BeEquivalentTo(
                 new Dictionary<string, string[]>
                 {
                     ["NoLogo"] = null,
                     ["Configuration"] = new[] { "Debug", "Release" },
-                    ["Target"] = new[] { "Restore", "Compile" }
+                    ["Target"] = new[] { "Restore", "Compile" },
+                    [Constants.LoadedLocalProfilesParameterName] = profileNames
                 });
         }
 
+#pragma warning disable CS0649
         private class TestBuild : NukeBuild, ITestComponent
         {
             [Parameter] public string Param;
@@ -89,13 +92,14 @@ namespace Nuke.Common.Tests
         [ParameterPrefix("Component")]
         private interface ITestComponent : INukeBuild
         {
-            [Parameter] string Param1 => ValueInjectionUtility.TryGetValue(() => Param1);
-            [Parameter] string Param2 => ValueInjectionUtility.TryGetValue(() => Param2);
-            [Parameter] string Param3 => ValueInjectionUtility.TryGetValue(() => Param3);
+            [Parameter] string Param1 => TryGetValue(() => Param1);
+            [Parameter] string Param2 => TryGetValue(() => Param2);
+            [Parameter] string Param3 => TryGetValue(() => Param3);
 
             Target Foo => _ => _;
             Target Bar => _ => _;
             Target Zoo => _ => _;
         }
+#pragma warning restore CS0649
     }
 }

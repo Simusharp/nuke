@@ -17,9 +17,12 @@
 job("continuous") {
     git {
         depth = UNLIMITED_DEPTH
+        refSpec {
+            +"refs/heads/*:refs/heads/*"
+        }
     }
 
-    container("mcr.microsoft.com/dotnet/sdk:5.0") {
+    container("mcr.microsoft.com/dotnet/sdk:6.0") {
         shellScript {
             content = "./build.sh Test"
         }

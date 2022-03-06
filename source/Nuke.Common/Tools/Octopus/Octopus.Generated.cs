@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/Octopus.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/Octopus/Octopus.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -37,9 +37,9 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Octopus Deploy is an automated deployment server, which you install yourself, much like you would install SQL Server, Team Foundation Server or JetBrains TeamCity. Octopus makes it easy to automate deployment of ASP.NET web applications and Windows Services into development, test and production environments.<para/>Along with the Octopus Deploy server, you'll also install a lightweight agent service on each of the machines that you plan to deploy to, for example your web and application servers. We call this the Tentacle agent; the idea being that one Octopus server controls many Tentacles, potentially a lot more than 8! With Octopus and Tentacle, you can easily deploy to your own servers, or cloud services from providers like Amazon Web Services or Microsoft Azure.</p>
         ///   <p>For more details, visit the <a href="https://octopus.com/">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> Octopus(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> Octopus(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(OctopusPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, OctopusLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(OctopusPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, OctopusLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -2022,7 +2022,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Your API key. Get this from the user profile page. Your must provide an apiKey or username and password. If the guest account is enabled, a key of API-GUEST can be used.</p>
         /// </summary>
         [Pure]
-        public static T SetApiKey<T>(this T toolSettings, string apiKey) where T : OctopusPushSettings
+        public static T SetApiKey<T>(this T toolSettings, [Secret] string apiKey) where T : OctopusPushSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.ApiKey = apiKey;
@@ -2070,7 +2070,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Password to use when authenticating with the server.</p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : OctopusPushSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : OctopusPushSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;
@@ -2361,7 +2361,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>The password for the proxy. If both the username and password are omitted and proxyAddress is specified, the default credentials are used.</p>
         /// </summary>
         [Pure]
-        public static T SetProxyPassword<T>(this T toolSettings, string proxyPassword) where T : OctopusPushSettings
+        public static T SetProxyPassword<T>(this T toolSettings, [Secret] string proxyPassword) where T : OctopusPushSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.ProxyPassword = proxyPassword;
@@ -3695,7 +3695,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Your API key. Get this from the user profile page. Your must provide an apiKey or username and password. If the guest account is enabled, a key of API-GUEST can be used.</p>
         /// </summary>
         [Pure]
-        public static T SetApiKey<T>(this T toolSettings, string apiKey) where T : OctopusCreateReleaseSettings
+        public static T SetApiKey<T>(this T toolSettings, [Secret] string apiKey) where T : OctopusCreateReleaseSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.ApiKey = apiKey;
@@ -3743,7 +3743,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Password to use when authenticating with the server.</p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : OctopusCreateReleaseSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : OctopusCreateReleaseSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;
@@ -4034,7 +4034,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>The password for the proxy. If both the username and password are omitted and proxyAddress is specified, the default credentials are used.</p>
         /// </summary>
         [Pure]
-        public static T SetProxyPassword<T>(this T toolSettings, string proxyPassword) where T : OctopusCreateReleaseSettings
+        public static T SetProxyPassword<T>(this T toolSettings, [Secret] string proxyPassword) where T : OctopusCreateReleaseSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.ProxyPassword = proxyPassword;
@@ -5077,7 +5077,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Your API key. Get this from the user profile page. Your must provide an apiKey or username and password. If the guest account is enabled, a key of API-GUEST can be used.</p>
         /// </summary>
         [Pure]
-        public static T SetApiKey<T>(this T toolSettings, string apiKey) where T : OctopusDeployReleaseSettings
+        public static T SetApiKey<T>(this T toolSettings, [Secret] string apiKey) where T : OctopusDeployReleaseSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.ApiKey = apiKey;
@@ -5125,7 +5125,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Password to use when authenticating with the server.</p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : OctopusDeployReleaseSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : OctopusDeployReleaseSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;
@@ -5416,7 +5416,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>The password for the proxy. If both the username and password are omitted and proxyAddress is specified, the default credentials are used.</p>
         /// </summary>
         [Pure]
-        public static T SetProxyPassword<T>(this T toolSettings, string proxyPassword) where T : OctopusDeployReleaseSettings
+        public static T SetProxyPassword<T>(this T toolSettings, [Secret] string proxyPassword) where T : OctopusDeployReleaseSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.ProxyPassword = proxyPassword;
@@ -5697,7 +5697,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Your API key. Get this from the user profile page. Your must provide an apiKey or username and password. If the guest account is enabled, a key of API-GUEST can be used.</p>
         /// </summary>
         [Pure]
-        public static T SetApiKey<T>(this T toolSettings, string apiKey) where T : OctopusBuildInformationSettings
+        public static T SetApiKey<T>(this T toolSettings, [Secret] string apiKey) where T : OctopusBuildInformationSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.ApiKey = apiKey;
@@ -5745,7 +5745,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>Password to use when authenticating with the server.</p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : OctopusBuildInformationSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : OctopusBuildInformationSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;
@@ -6036,7 +6036,7 @@ namespace Nuke.Common.Tools.Octopus
         ///   <p>The password for the proxy. If both the username and password are omitted and proxyAddress is specified, the default credentials are used.</p>
         /// </summary>
         [Pure]
-        public static T SetProxyPassword<T>(this T toolSettings, string proxyPassword) where T : OctopusBuildInformationSettings
+        public static T SetProxyPassword<T>(this T toolSettings, [Secret] string proxyPassword) where T : OctopusBuildInformationSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.ProxyPassword = proxyPassword;
@@ -6138,7 +6138,7 @@ namespace Nuke.Common.Tools.Octopus
     {
         public static OctopusPackFormat NuPkg = (OctopusPackFormat) "NuPkg";
         public static OctopusPackFormat Zip = (OctopusPackFormat) "Zip";
-        public static explicit operator OctopusPackFormat(string value)
+        public static implicit operator OctopusPackFormat(string value)
         {
             return new OctopusPackFormat { Value = value };
         }
@@ -6157,7 +6157,7 @@ namespace Nuke.Common.Tools.Octopus
         public static OctopusOverwriteMode FailIfExists = (OctopusOverwriteMode) "FailIfExists";
         public static OctopusOverwriteMode OverwriteExisting = (OctopusOverwriteMode) "OverwriteExisting";
         public static OctopusOverwriteMode IgnoreIfExists = (OctopusOverwriteMode) "IgnoreIfExists";
-        public static explicit operator OctopusOverwriteMode(string value)
+        public static implicit operator OctopusOverwriteMode(string value)
         {
             return new OctopusOverwriteMode { Value = value };
         }

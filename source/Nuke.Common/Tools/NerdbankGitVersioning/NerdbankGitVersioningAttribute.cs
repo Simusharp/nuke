@@ -1,4 +1,4 @@
-// Copyright 2020 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -26,7 +26,7 @@ namespace Nuke.Common.Tools.NerdbankGitVersioning
         {
             var version = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(s => s
                     .DisableProcessLogOutput()
-                    .SetFormat(NerdbankGitVersioningFormat.Json))
+                    .SetFormat(NerdbankGitVersioningFormat.json))
                 .Result;
 
             if (UpdateBuildNumber)

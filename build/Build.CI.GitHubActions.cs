@@ -4,54 +4,18 @@
 
 using Nuke.Common.CI.GitHubActions;
 using Nuke.Components;
-using static Nuke.Components.IHazTwitterCredentials;
-#if ENTERPRISE
-using Nuke.Enterprise.Notifications;
-using static Nuke.Enterprise.Notifications.IHazSlackCredentials;
-#endif
 
 [GitHubActions(
     "continuous",
     GitHubActionsImage.WindowsLatest,
     GitHubActionsImage.UbuntuLatest,
     GitHubActionsImage.MacOsLatest,
-    OnPushBranchesIgnore = new[] { MasterBranch, ReleaseBranchPrefix + "/*" },
+    OnPushBranchesIgnore = new[] { MasterBranch, $"{ReleaseBranchPrefix}/*" },
     OnPullRequestBranches = new[] { DevelopBranch },
     PublishArtifacts = false,
-    InvokedTargets = new[]
-                     {
-                         nameof(ITest.Test),
-                         nameof(IPack.Pack),
-                         nameof(IReportDuplicates.ReportDuplicates),
-                         nameof(IReportIssues.ReportIssues),
-                         nameof(IReportCoverage.ReportCoverage)
-                     },
-    CacheKeyFiles = new[]{ "global.json", "source/**/*.csproj" },
-    ImportSecrets = new[]
-                    {
-                        nameof(EnterpriseAccessToken),
-#if ENTERPRISE
-                        Slack + nameof(IHazSlackCredentials.AppAccessToken),
-                        Slack + nameof(IHazSlackCredentials.UserAccessToken),
-#endif
-                    })]
-[GitHubActions(
-    "deployment",
-    GitHubActionsImage.MacOsLatest,
-    OnPushBranches = new[] { MasterBranch },
-    InvokedTargets = new[] { nameof(IPublish.Publish) },
-    ImportGitHubTokenAs = nameof(GitHubToken),
-    ImportSecrets =
-        new[]
-        {
-            nameof(IPublish.NuGetApiKey),
-            nameof(SlackWebhook),
-            nameof(GitterAuthToken),
-            Twitter + nameof(IHazTwitterCredentials.ConsumerKey),
-            Twitter + nameof(IHazTwitterCredentials.ConsumerSecret),
-            Twitter + nameof(IHazTwitterCredentials.AccessToken),
-            Twitter + nameof(IHazTwitterCredentials.AccessTokenSecret)
-        })]
+    InvokedTargets = new[] { nameof(ITest.Test), nameof(IPack.Pack) },
+    CacheKeyFiles = new[] { "global.json", "source/**/*.csproj" },
+    EnableGitHubContext = true)]
 partial class Build
 {
 }

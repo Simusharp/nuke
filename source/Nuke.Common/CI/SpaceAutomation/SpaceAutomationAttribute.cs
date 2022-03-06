@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -20,6 +20,9 @@ namespace Nuke.Common.CI.SpaceAutomation
         private readonly string _name;
         private readonly string _image;
 
+        private bool? _onPush;
+        private int? _timeoutInMinutes;
+
         public SpaceAutomationAttribute(string name, string image)
         {
             _name = name;
@@ -33,28 +36,17 @@ namespace Nuke.Common.CI.SpaceAutomation
         public override IEnumerable<string> RelevantTargetNames => InvokedTargets;
         public override IEnumerable<string> IrrelevantTargetNames => new string[0];
 
-        private int? _resourcesCpu;
-        private int? _resourcesMemory;
-        private bool? _onPush;
-
-        public int ResourcesCpu
-        {
-            set => _resourcesCpu = value;
-            get => _resourcesCpu ?? 0;
-        }
-
-        public int ResourcesMemory
-        {
-            set => _resourcesMemory = value;
-            get => _resourcesMemory ?? 0;
-        }
+        public string VolumeSize { get; set; }
+        public string ResourcesCpu { get; set; }
+        public string ResourcesMemory { get; set; }
+        public string[] RefSpec { get; set; } = { "refs/heads/*:refs/heads/*" };
 
         public string[] InvokedTargets { get; set; } = new string[0];
 
         public bool OnPush
         {
             set => _onPush = value;
-            get => _onPush ?? false;
+            get => throw new NotSupportedException();
         }
 
         public string[] OnPushBranchIncludes { get; set; }
@@ -65,6 +57,13 @@ namespace Nuke.Common.CI.SpaceAutomation
         public string[] OnPushPathExcludes { get; set; }
 
         public string OnCronSchedule { get; set; }
+        public string[] ImportSecrets { get; set; } = new string[0];
+
+        public int TimeoutInMinutes
+        {
+            set => _timeoutInMinutes = value;
+            get => throw new NotSupportedException();
+        }
 
         public override CustomFileWriter CreateWriter(StreamWriter streamWriter)
         {
@@ -76,8 +75,11 @@ namespace Nuke.Common.CI.SpaceAutomation
             return new SpaceAutomationConfiguration
                    {
                        Name = _name,
+                       VolumeSize = VolumeSize,
+                       RefSpec = RefSpec,
                        Container = GetContainer(),
-                       Triggers = GetTriggers().ToArray()
+                       Triggers = GetTriggers().ToArray(),
+                       TimeoutInMinutes = _timeoutInMinutes
                    };
         }
 
@@ -87,6 +89,7 @@ namespace Nuke.Common.CI.SpaceAutomation
                    {
                        Image = _image,
                        Resources = GetResources(),
+                       Imports = GetImports().ToDictionary(x => x.Key, x => x.Value),
                        BuildScript = BuildCmdPath.Replace(".cmd", ".sh"),
                        InvokedTargets = InvokedTargets
                    };
@@ -94,10 +97,16 @@ namespace Nuke.Common.CI.SpaceAutomation
 
         protected virtual SpaceAutomationResources GetResources()
         {
-            ControlFlow.Assert(_resourcesCpu == null || ResourcesCpu > 0, "ResourcesCpu > 0");
-            ControlFlow.Assert(_resourcesMemory == null || ResourcesMemory > 0, "ResourcesMemory > 0");
+            return new SpaceAutomationResources
+                   {
+                       Cpu = ResourcesCpu,
+                       Memory = ResourcesMemory
+                   };
+        }
 
-            return new SpaceAutomationResources { Cpu = _resourcesCpu, Memory = _resourcesMemory };
+        private IEnumerable<(string Key, string Value)> GetImports()
+        {
+            return ImportSecrets.Select(x => ($"env[{x.DoubleQuote()}]", $"Secrets({x.SplitCamelHumpsWithKnownWords().JoinDash().ToLowerInvariant().DoubleQuote()})"));
         }
 
         protected virtual IEnumerable<SpaceAutomationTrigger> GetTriggers()

@@ -15,30 +15,38 @@
 # ------------------------------------------------------------------------------
 
 image:
-  - Visual Studio 2019
-  - Ubuntu1804
+  - Visual Studio 2022
+
+branches:
+  only:
+    - master
+    - /release\/*/
 
 skip_tags: true
 
 build_script:
-  - cmd: .\build.cmd Test Pack
-  - sh: ./build.cmd Test Pack
+  - cmd: .\build.cmd Pack Test SignPackages Publish
+  - sh: ./build.cmd Pack Test SignPackages Publish
 
 artifacts:
+  - path: output/packages/*.nupkg
   - path: output/test-results/*.trx
   - path: output/test-results/*.xml
-  - path: output/coverage-report.zip
-  - path: output/packages/*.nupkg
 
 environment:
+  PublicNuGetApiKey:
+    secure: gXyMC1PrfsTGaK8vnlB6ch1DDpTEaOuK+Oy0Kz8xm1i4MjA7cb+6GkTaQEI6eCuy
   SignPathApiToken:
-    secure: zYFzA/7H1MDXDlpX6SAyv41kiBmu8Vh3kvWC7tPfk7eVdhh9mGQgXC7AzgcGnpsg
-  SignPathOrganizationId: 0fdaf334-6910-41f4-83d2-e58e4cccb087
-  SignPathProjectSlug: nuke
-  SignPathPolicySlug: release-signing
-  AppAccessToken:
-    secure: HPPJFlTf6aaHXIbCYTkBIesRrjBIm1X0TijzI7xgI6ATYeAXuXoNiRABh/ORJn8RqX461KG7WgkZcWfxiNaGV4X99tc8SOwBMVAv/qk6INM=
-  UserAccessToken:
-    secure: cMArtN7cGnW6zI9ryMiQZSfcv2y+6Ads8KPvZIN18ITMd3ivAg4/E9JSh0CsFury1vzJ8haKI9lv2E+u4lUT9Q==
-  EnterpriseAccessToken:
-    secure: 3nWSVRsMDisi41a6kclhRl7pwacy5zLuWIMZy2J5yD+62uHga2Pquc1SiuIZgu2K
+    secure: uQTH2MxpqiqWTy7EJkjtNc43ipG17EUOQN99QsODRNgtNEcikDaP0t4ylekK/ibn
+  TwitterConsumerKey:
+    secure: BY+J0NeFwJrIk/IcLlApwCrhwPFYbs17ryopOEU8S80=
+  TwitterConsumerSecret:
+    secure: LzY8VaBdbjdHtbCIJusREn5foh6wOEKqwBqsmBgpyhulQs21PkgYs2tilSL+SowcJw3p4QH6QKLOEp3uGwTj8g==
+  TwitterAccessToken:
+    secure: nnv1h5nkNm4MS50soQHiYXVUf0UR+gx54imrggateey6oA+rdCdna0TaUCH1vsDwHEitHDPRdx39xjJMBzwRxA==
+  TwitterAccessTokenSecret:
+    secure: OGFEkW5fHl0YJzKnTTWJ3oHhQfjMs9RWGJMjeQ2HMIG+yUwy0NQGVUY4qOCRgrXW
+  GitterAuthToken:
+    secure: Fy//YC4mL9IipkXG3OENTpC9g2qOtU32/5WU6PHw/HLty8YjvHXHsnTkk0HWJJMw
+  SlackWebhook:
+    secure: xENxLITTR28hBLEY51YWMeHhxkhg1h1tLY1zGre1/hkmagda0rH4ZxOTbJ1bcmC3D6uhvJKLtSHqY7TK/48Nw3EbvN9wNFEt97HWYc9FE+g=

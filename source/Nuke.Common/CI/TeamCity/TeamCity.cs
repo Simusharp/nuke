@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -8,16 +8,13 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
 using JetBrains.Annotations;
 using Nuke.Common.IO;
-using Nuke.Common.OutputSinks;
 using Nuke.Common.Tools.DotCover;
 using Nuke.Common.Utilities;
 using Nuke.Common.Utilities.Collections;
-using Refit;
+using Serilog;
 
 namespace Nuke.Common.CI.TeamCity
 {
@@ -26,20 +23,11 @@ namespace Nuke.Common.CI.TeamCity
     /// </summary>
     [PublicAPI]
     [ExcludeFromCodeCoverage]
-    public class TeamCity : Host, IBuildServer
+    public partial class TeamCity : Host, IBuildServer
     {
         public new static TeamCity Instance => Host.Instance as TeamCity;
 
         internal static bool IsRunningTeamCity => !Environment.GetEnvironmentVariable("TEAMCITY_VERSION").IsNullOrEmpty();
-
-        public static T CreateRestClient<T>(string serverUrl, string username, string password)
-        {
-            var credentials = new NetworkCredential(username, password);
-            var baseAddress = new Uri($"{serverUrl}/app/rest");
-            var httpClient = new HttpClient(new HttpClientHandler { Credentials = credentials }) { BaseAddress = baseAddress };
-
-            return RestService.For<T>(httpClient);
-        }
 
         [CanBeNull]
         private static IReadOnlyDictionary<string, string> ParseDictionary([CanBeNull] string file)
@@ -76,7 +64,6 @@ namespace Nuke.Common.CI.TeamCity
         private readonly Lazy<IReadOnlyDictionary<string, string>> _configurationProperties;
         private readonly Lazy<IReadOnlyDictionary<string, string>> _runnerProperties;
         private readonly Lazy<IReadOnlyCollection<string>> _recentlyFailedTests;
-        private readonly Lazy<ITeamCityRestClient> _restClient;
 
         internal TeamCity()
             : this(messageSink: null)
@@ -97,16 +84,7 @@ namespace Nuke.Common.CI.TeamCity
                     ? TextTasks.ReadAllLines(file).ToImmutableList() as IReadOnlyCollection<string>
                     : new string[0];
             });
-
-            _restClient = Lazy.Create(() => CreateRestClient<ITeamCityRestClient>());
         }
-
-        public T CreateRestClient<T>()
-        {
-            return CreateRestClient<T>(ServerUrl, SystemProperties["teamcity.auth.userId"], SystemProperties["teamcity.auth.password"]);
-        }
-
-        protected internal override OutputSink OutputSink => new TeamCityOutputSink(this);
 
         string IBuildServer.Branch => BranchName;
         string IBuildServer.Commit => BuildVcsNumber;
@@ -116,8 +94,6 @@ namespace Nuke.Common.CI.TeamCity
         public IReadOnlyDictionary<string, string> RunnerProperties => _runnerProperties.Value;
         public IReadOnlyCollection<string> RecentlyFailedTests => _recentlyFailedTests.Value;
 
-        public ITeamCityRestClient RestClient => _restClient.Value;
-
         public string BuildConfiguration => SystemProperties?["teamcity.buildConfName"];
         public string BuildTypeId => SystemProperties?["teamcity.buildType.id"];
         [NoConvert] public string BuildNumber => EnvironmentInfo.GetVariable<string>("BUILD_NUMBER");
@@ -125,9 +101,16 @@ namespace Nuke.Common.CI.TeamCity
         public string Version => SystemProperties?["teamcity.version"];
         public string ProjectName => SystemProperties?["teamcity.projectName"];
         public string ServerUrl => ConfigurationProperties?["teamcity.serverUrl"];
+        public string AuthUserId => SystemProperties["teamcity.auth.userId"];
+        public string AuthPassword => SystemProperties["teamcity.auth.password"];
         public string ProjectId => ConfigurationProperties?["teamcity.project.id"];
         public long BuildId => long.Parse(ConfigurationProperties?["teamcity.build.id"] ?? 0.ToString());
         public bool IsBuildPersonal => bool.Parse(SystemProperties?.GetValueOrDefault("build.is.personal") ?? bool.FalseString);
+        public bool IsPullRequest => ConfigurationProperties?.GetValueOrDefault("teamcity.pullRequest.number") != null;
+        [CanBeNull] public long? PullRequestNumber => IsPullRequest ? long.Parse(ConfigurationProperties["teamcity.pullRequest.number"]) : null;
+        [CanBeNull] public string PullRequestSourceBranch => IsPullRequest ? ConfigurationProperties["teamcity.pullRequest.source.branch"] : null;
+        [CanBeNull] public string PullRequestTargetBranch => IsPullRequest ? ConfigurationProperties["teamcity.pullRequest.target.branch"] : null;
+        [CanBeNull] public string PullRequestTitle => IsPullRequest ? ConfigurationProperties["teamcity.pullRequest.title"] : null;
 
         [NoConvert] public string BranchName => ConfigurationProperties?.GetValueOrDefault("teamcity.build.branch")
             .NotNull("Configuration property 'teamcity.build.branch' is null. See https://youtrack.jetbrains.com/issue/TW-62888.");
@@ -150,18 +133,17 @@ namespace Nuke.Common.CI.TeamCity
             bool? parseOutOfDate = null,
             TeamCityNoDataPublishedAction? action = null)
         {
-            ControlFlow.Assert(
+            Assert.True(
                 type != TeamCityImportType.dotNetCoverage || tool != null,
-                $"Importing data of type '{type}' requires to specify the tool.");
-            ControlFlow.AssertWarn(
-                !(tool == TeamCityImportTool.dotcover &&
-                  ConfigurationProperties["teamcity.dotCover.home"].EndsWithOrdinalIgnoreCase("bundled")),
-                new[]
-                {
-                    "Configuration parameter 'teamcity.dotCover.home' is set to the bundled version.",
-                    $"Adding the '{nameof(TeamCitySetDotCoverHomePathAttribute)}' will automatically set " +
-                    $"it to '{nameof(DotCoverTasks)}.{nameof(DotCoverTasks.DotCoverPath)}'."
-                }.JoinNewLine());
+                $"Importing data of type '{type}' requires to specify the tool");
+            if (tool == TeamCityImportTool.dotcover &&
+                ConfigurationProperties["teamcity.dotCover.home"].EndsWithOrdinalIgnoreCase("bundled"))
+            {
+                Log.Warning("Configuration parameter 'teamcity.dotCover.home' is set to the bundled version." +
+                            "Adding the {AttributeName} will automatically set " +
+                            $"it to '{nameof(DotCoverTasks)}.{nameof(DotCoverTasks.DotCoverPath)}'",
+                    nameof(TeamCitySetDotCoverHomePathAttribute));
+            }
 
             Write("importData",
                 x => x

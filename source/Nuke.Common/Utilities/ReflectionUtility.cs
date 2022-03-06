@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -128,6 +128,11 @@ namespace Nuke.Common.Utilities
                    method.GetParameters().First() == parameter;
         }
 
+        public static bool IsExplicit(this MemberInfo member)
+        {
+            return member.Name.Contains(".");
+        }
+
         public static string GetPossibleExplicitName(this MemberInfo member)
         {
             return $"{member.DeclaringType.NotNull().FullName.NotNull().Replace("+", ".")}.{member.Name}";
@@ -135,7 +140,7 @@ namespace Nuke.Common.Utilities
 
         public static MemberInfo GetImplementedOrInterfaceMember(this MemberInfo member, Type classType)
         {
-            ControlFlow.Assert(classType.IsClass, "classType.IsClass");
+            Assert.True(classType.IsClass);
             return member.DeclaringType != classType
                 ? classType.GetMember(member.Name).SingleOrDefault() ??
                   classType.GetMember(member.GetPossibleExplicitName(), Instance).SingleOrDefault() ??
@@ -146,35 +151,54 @@ namespace Nuke.Common.Utilities
         public static IEnumerable<MemberInfo> GetAllMembers(
             this Type buildType,
             Func<MemberInfo, bool> filter,
-            BindingFlags bindingFlags)
+            BindingFlags bindingFlags,
+            bool allowAmbiguity,
+            bool filterQuasiOverridden = false)
         {
-            var interfaceMembers = buildType.GetInterfaces()
+            var interfaceMembersByName = buildType.GetInterfaces()
                 .SelectMany(x => x.GetMembers(bindingFlags))
                 .Where(filter)
-                .Where(x => buildType.GetMember(x.Name).SingleOrDefault() == null).ToLookup(x => x.Name);
+                .Where(x => buildType.GetMember(x.Name).SingleOrDefault() == null).ToLookup(x => x.GetDisplayShortName());
             var classMembers = buildType
-                .GetProperties(bindingFlags)
+                .GetMembers(bindingFlags)
                 .Where(filter)
-                .Where(x => !x.Name.Contains(".")).ToDictionary(x => x.Name);
+                .Where(x => !x.IsExplicit()).ToDictionary(x => x.Name);
+            var removeMembers = new List<MemberInfo>();
 
-            foreach (var interfacePropertiesByName in interfaceMembers)
+            foreach (var interfaceMembers in interfaceMembersByName)
             {
-                var memberName = interfacePropertiesByName.Key;
-                var memberType = interfacePropertiesByName.First().MemberType;
+                var memberName = interfaceMembers.Key;
+                var memberType = interfaceMembers.First().MemberType;
                 var classMember = classMembers.GetValueOrDefault(memberName);
 
-                ControlFlow.Assert(interfacePropertiesByName.Count() == 1 || classMember != null,
+                if (filterQuasiOverridden && classMember == null && interfaceMembers.Count() > 1)
+                {
+                    var orderedProperties = interfaceMembers
+                        .TSort(x => interfaceMembers.Where(y => y.DeclaringType.NotNull().IsAssignableFrom(x.DeclaringType))).ToList();
+
+                    var mostBaseType = orderedProperties.First().DeclaringType.NotNull();
+                    var derivedTypes = orderedProperties.Skip(1).Select(x => x.DeclaringType);
+                    if (derivedTypes.All(x => mostBaseType.IsAssignableFrom(x)))
+                    {
+                        removeMembers.AddRange(orderedProperties.Take(orderedProperties.Count - 1));
+                        continue;
+                    }
+                }
+
+                Assert.True(allowAmbiguity || interfaceMembers.Count() == 1 || classMember != null,
                     new[] { $"{memberType} '{memberName}' must be implemented explicitly because it is inherited from multiple interfaces:" }
-                        .Concat(interfacePropertiesByName.Select(x => $" - {x.DeclaringType.NotNull().Name}"))
+                        .Concat(interfaceMembers.Select(x => $" - {x.DeclaringType.NotNull().Name}"))
                         .JoinNewLine());
-                ControlFlow.Assert(classMember == null || classMember.IsPublic(),
+
+                Assert.True(allowAmbiguity || classMember == null || classMember.IsPublic(),
                     new[] { $"{memberType} '{memberName}' must be marked public to override inherited member from:" }
-                        .Concat(interfacePropertiesByName.Select(x => $" - {x.DeclaringType.NotNull().Name}"))
+                        .Concat(interfaceMembers.Select(x => $" - {x.DeclaringType.NotNull().Name}"))
                         .JoinNewLine());
             }
 
             return classMembers.Values
-                .Concat(interfaceMembers.SelectMany(x => x).Select(x => x.GetImplementedOrInterfaceMember(buildType)))
+                .Concat(interfaceMembersByName.SelectMany(x => x).Select(x => x.GetImplementedOrInterfaceMember(buildType)))
+                .Except(removeMembers)
                 .Where(filter).ToList();
         }
     }

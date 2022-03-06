@@ -14,6 +14,9 @@
 # </auto-generated>
 # ------------------------------------------------------------------------------
 
+pr:
+  none
+
 stages:
   - stage: ubuntu_latest
     displayName: 'ubuntu-latest'
@@ -21,63 +24,50 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     jobs:
-      - job: Compile
-        displayName: '⚙️ Compile'
-        dependsOn: [  ]
-        steps:
-          - task: Cache@2
-            inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
-          - task: CmdLine@2
-            inputs:
-              script: './build.cmd Restore Compile --skip'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
       - job: Test
         displayName: '🚦 Test 🧩'
-        dependsOn: [ Compile ]
+        dependsOn: [  ]
         strategy:
           parallel: 2
         steps:
           - task: Cache@2
+            displayName: Cache (nuke-temp)
             inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
+              key: $(Agent.OS) | nuke-temp | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuke-temp
+              path: .nuke/temp
+          - task: Cache@2
+            displayName: Cache (nuget-packages)
+            inputs:
+              key: $(Agent.OS) | nuget-packages | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuget-packages
+              path: $(HOME)/.nuget/packages
           - task: CmdLine@2
             inputs:
-              script: './build.cmd Test --skip --test-partition $(System.JobPositionInPhase)'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
+              script: './build.cmd Restore Compile Test --skip --partition $(System.JobPositionInPhase)/2'
           - task: PublishBuildArtifacts@1
             inputs:
               artifactName: test-results
               pathtoPublish: 'output/test-results'
       - job: Pack
         displayName: '📦 Pack'
-        dependsOn: [ Compile ]
+        dependsOn: [  ]
         steps:
           - task: Cache@2
+            displayName: Cache (nuke-temp)
             inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
+              key: $(Agent.OS) | nuke-temp | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuke-temp
+              path: .nuke/temp
+          - task: Cache@2
+            displayName: Cache (nuget-packages)
+            inputs:
+              key: $(Agent.OS) | nuget-packages | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuget-packages
+              path: $(HOME)/.nuget/packages
           - task: CmdLine@2
             inputs:
-              script: './build.cmd Pack --skip'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
+              script: './build.cmd Restore DownloadLicenses Compile Pack --skip'
           - task: PublishBuildArtifacts@1
             inputs:
               artifactName: packages
@@ -88,63 +78,50 @@ stages:
     pool:
       vmImage: 'windows-latest'
     jobs:
-      - job: Compile
-        displayName: '⚙️ Compile'
-        dependsOn: [  ]
-        steps:
-          - task: Cache@2
-            inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
-          - task: CmdLine@2
-            inputs:
-              script: './build.cmd Restore Compile --skip'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
       - job: Test
         displayName: '🚦 Test 🧩'
-        dependsOn: [ Compile ]
+        dependsOn: [  ]
         strategy:
           parallel: 2
         steps:
           - task: Cache@2
+            displayName: Cache (nuke-temp)
             inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
+              key: $(Agent.OS) | nuke-temp | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuke-temp
+              path: .nuke/temp
+          - task: Cache@2
+            displayName: Cache (nuget-packages)
+            inputs:
+              key: $(Agent.OS) | nuget-packages | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuget-packages
+              path: $(USERPROFILE)/.nuget/packages
           - task: CmdLine@2
             inputs:
-              script: './build.cmd Test --skip --test-partition $(System.JobPositionInPhase)'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
+              script: './build.cmd Restore Compile Test --skip --partition $(System.JobPositionInPhase)/2'
           - task: PublishBuildArtifacts@1
             inputs:
               artifactName: test-results
               pathtoPublish: 'output/test-results'
       - job: Pack
         displayName: '📦 Pack'
-        dependsOn: [ Compile ]
+        dependsOn: [  ]
         steps:
           - task: Cache@2
+            displayName: Cache (nuke-temp)
             inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
+              key: $(Agent.OS) | nuke-temp | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuke-temp
+              path: .nuke/temp
+          - task: Cache@2
+            displayName: Cache (nuget-packages)
+            inputs:
+              key: $(Agent.OS) | nuget-packages | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuget-packages
+              path: $(USERPROFILE)/.nuget/packages
           - task: CmdLine@2
             inputs:
-              script: './build.cmd Pack --skip'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
+              script: './build.cmd Restore DownloadLicenses Compile Pack --skip'
           - task: PublishBuildArtifacts@1
             inputs:
               artifactName: packages
@@ -155,63 +132,50 @@ stages:
     pool:
       vmImage: 'macOS-latest'
     jobs:
-      - job: Compile
-        displayName: '⚙️ Compile'
-        dependsOn: [  ]
-        steps:
-          - task: Cache@2
-            inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
-          - task: CmdLine@2
-            inputs:
-              script: './build.cmd Restore Compile --skip'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
       - job: Test
         displayName: '🚦 Test 🧩'
-        dependsOn: [ Compile ]
+        dependsOn: [  ]
         strategy:
           parallel: 2
         steps:
           - task: Cache@2
+            displayName: Cache (nuke-temp)
             inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
+              key: $(Agent.OS) | nuke-temp | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuke-temp
+              path: .nuke/temp
+          - task: Cache@2
+            displayName: Cache (nuget-packages)
+            inputs:
+              key: $(Agent.OS) | nuget-packages | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuget-packages
+              path: $(HOME)/.nuget/packages
           - task: CmdLine@2
             inputs:
-              script: './build.cmd Test --skip --test-partition $(System.JobPositionInPhase)'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
+              script: './build.cmd Restore Compile Test --skip --partition $(System.JobPositionInPhase)/2'
           - task: PublishBuildArtifacts@1
             inputs:
               artifactName: test-results
               pathtoPublish: 'output/test-results'
       - job: Pack
         displayName: '📦 Pack'
-        dependsOn: [ Compile ]
+        dependsOn: [  ]
         steps:
           - task: Cache@2
+            displayName: Cache (nuke-temp)
             inputs:
-              key: $(Agent.OS) | global.json, source/**/*.csproj
-              restoreKeys: $(Agent.OS)
-              path: ~/.nuget/packages
+              key: $(Agent.OS) | nuke-temp | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuke-temp
+              path: .nuke/temp
+          - task: Cache@2
+            displayName: Cache (nuget-packages)
+            inputs:
+              key: $(Agent.OS) | nuget-packages | global.json, source/**/*.csproj
+              restoreKeys: $(Agent.OS) | nuget-packages
+              path: $(HOME)/.nuget/packages
           - task: CmdLine@2
             inputs:
-              script: './build.cmd Pack --skip'
-            env:
-              AzurePipelinesAccessToken: $(System.AccessToken)
-              EnterpriseAccessToken: $(EnterpriseAccessToken)
-              SlackAppAccessToken: $(SlackAppAccessToken)
-              SlackUserAccessToken: $(SlackUserAccessToken)
+              script: './build.cmd Restore DownloadLicenses Compile Pack --skip'
           - task: PublishBuildArtifacts@1
             inputs:
               artifactName: packages

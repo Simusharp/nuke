@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using Nuke.Common.CI;
+using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.Utilities;
 using Nuke.Common.Utilities.Collections;
@@ -22,6 +23,7 @@ namespace Nuke.Common
             RootDirectory = GetRootDirectory();
             TemporaryDirectory = GetTemporaryDirectory(RootDirectory);
             FileSystemTasks.EnsureExistingDirectory(TemporaryDirectory);
+
             BuildAssemblyDirectory = GetBuildAssemblyDirectory();
             BuildProjectFile = GetBuildProjectFile(BuildAssemblyDirectory);
             BuildProjectDirectory = BuildProjectFile?.Parent;
@@ -34,7 +36,7 @@ namespace Nuke.Common
         /// <summary>
         /// Gets the full path to the root directory.
         /// </summary>
-        [Parameter("Root directory during build execution.", Name = "Root")]
+        [Parameter("Root directory during build execution.", Name = RootDirectoryParameterName)]
         public static AbsolutePath RootDirectory { get; }
 
         /// <summary>
@@ -66,27 +68,21 @@ namespace Nuke.Common
         [Parameter("Logging verbosity during build execution. Default is 'Normal'.")]
         public static Verbosity Verbosity
         {
-            get => (Verbosity) LogLevel;
-            set => LogLevel = (LogLevel) value;
+            get => (Verbosity) Logging.Level;
+            set => Logging.Level = (LogLevel) value;
         }
 
         /// <summary>
         /// Gets the host for execution. Default is <em>automatic</em>.
         /// </summary>
         [Parameter("Host for execution. Default is 'automatic'.", ValueProviderMember = nameof(HostNames))]
-        public static Host Host { get; }
+        public static Host Host { get; internal set; }
 
         [Parameter("Defines the profiles to load.", Name = LoadedLocalProfilesParameterName)]
         public static string[] LoadedLocalProfiles { get; }
 
         public static bool IsLocalBuild => !IsServerBuild;
         public static bool IsServerBuild => Host is IBuildServer;
-
-        public static LogLevel LogLevel
-        {
-            get => Logger.LogLevel;
-            set => Logger.LogLevel = value;
-        }
 
         private static AbsolutePath GetRootDirectory()
         {
@@ -100,8 +96,8 @@ namespace Nuke.Common
             return TryGetRootDirectoryFrom(EnvironmentInfo.WorkingDirectory)
                 .NotNull(new[]
                          {
-                             $"Could not locate '{NukeDirectoryName}' directory while walking up from '{EnvironmentInfo.WorkingDirectory}'.",
-                             "Either create the directory to mark the root directory, or use the --root parameter to use the working directory."
+                             $"Could not locate '{NukeDirectoryName}' directory/file while walking up from '{EnvironmentInfo.WorkingDirectory}'.",
+                             "Either create a directory/file to mark the root directory, or add '--root [path]' to the invocation."
                          }.JoinNewLine());
         }
 
@@ -109,7 +105,7 @@ namespace Nuke.Common
         private static AbsolutePath GetBuildAssemblyDirectory()
         {
             var entryAssembly = Assembly.GetEntryAssembly();
-            if (entryAssembly == null || entryAssembly.GetTypes().All(x => !x.IsSubclassOf(typeof(NukeBuild))))
+            if (entryAssembly == null || entryAssembly.Location.IsNullOrEmpty() || entryAssembly.GetTypes().All(x => !x.IsSubclassOf(typeof(NukeBuild))))
                 return null;
 
             return (AbsolutePath) Path.GetDirectoryName(entryAssembly.Location).NotNull();

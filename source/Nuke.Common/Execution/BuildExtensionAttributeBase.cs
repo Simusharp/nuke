@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -35,6 +35,12 @@ namespace Nuke.Common.Execution
             NukeBuild build,
             IReadOnlyCollection<ExecutableTarget> executableTargets,
             IReadOnlyCollection<ExecutableTarget> executionPlan);
+    }
+
+    [PublicAPI]
+    public interface IOnTargetSummaryUpdated : IBuildExtension
+    {
+        void OnTargetSummaryUpdated(NukeBuild build, ExecutableTarget target);
     }
 
     [PublicAPI]

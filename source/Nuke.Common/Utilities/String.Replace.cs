@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -32,6 +32,12 @@ namespace Nuke.Common.Utilities
         public static string ReplaceUnicode(this string str)
         {
             return s_unicodeRegex.Replace(str, m => ((char) int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString());
+        }
+
+        [Pure]
+        public static string ReplaceKnownWords(this string str)
+        {
+            return KnownWords.Aggregate(str, (s, r) => s.ReplaceRegex(r, _ => r, RegexOptions.IgnoreCase));
         }
     }
 }

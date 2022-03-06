@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -43,6 +43,21 @@ namespace Nuke.Common.Tooling
     {
         protected string Value { get; set; }
 
+        public static implicit operator string([CanBeNull] Enumeration value)
+        {
+            return value?.Value;
+        }
+
+        public static bool operator ==(Enumeration a, Enumeration b)
+        {
+            return EqualityComparer<Enumeration>.Default.Equals(a, b);
+        }
+
+        public static bool operator !=(Enumeration a, Enumeration b)
+        {
+            return !EqualityComparer<Enumeration>.Default.Equals(a, b);
+        }
+
         protected bool Equals(Enumeration other)
         {
             return string.Equals(Value, other.Value);
@@ -84,7 +99,7 @@ namespace Nuke.Common.Tooling
                 {
                     var matchingFields = typeof(T).GetFields(ReflectionUtility.Static)
                         .Where(x => x.Name.EqualsOrdinalIgnoreCase(stringValue)).ToList();
-                    ControlFlow.Assert(matchingFields.Count == 1, "matchingFields.Count == 1");
+                    Assert.HasSingleItem(matchingFields);
                     return matchingFields.Single().GetValue(obj: null);
                 }
 

@@ -1,4 +1,4 @@
-// Copyright 2019 Maintainers of NUKE.
+// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using JetBrains.Annotations;
 using Nuke.Common.Utilities;
-using Nuke.Common.ValueInjection;
 
 namespace Nuke.Common.CI.TeamCity.Configuration
 {
@@ -22,7 +21,6 @@ namespace Nuke.Common.CI.TeamCity.Configuration
         public string BuildCmdPath { get; set; }
         public string[] InvokedTargets { get; set; }
         public Partition Partition { get; set; }
-        public string PartitionName { get; set; }
         public TeamCityParameter[] Parameters { get; set; }
         public string[] ArtifactRules { get; set; }
 
@@ -105,7 +103,7 @@ namespace Nuke.Common.CI.TeamCity.Configuration
             {
                 var arguments = $"{InvokedTargets.JoinSpace()} --skip";
                 if (Partition != null)
-                    arguments += $" --{ParameterService.GetParameterDashedName(PartitionName)} {Partition.Part}";
+                    arguments += $" --partition {Partition}";
 
                 void WriteConditionalExec(string path, string condition, string platform)
                 {

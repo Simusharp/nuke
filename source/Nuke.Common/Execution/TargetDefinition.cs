@@ -1,4 +1,4 @@
-﻿// Copyright 2019 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -28,7 +28,6 @@ namespace Nuke.Common.Execution
         public NukeBuild Build { get; }
 
         internal string Description { get; set; }
-        internal ExecutionStatus Status { get; set; }
         internal List<Expression<Func<bool>>> DynamicConditions { get; } = new List<Expression<Func<bool>>>();
         internal List<Expression<Func<bool>>> StaticConditions { get; } = new List<Expression<Func<bool>>>();
         internal List<LambdaExpression> Requirements { get; } = new List<LambdaExpression>();
@@ -43,6 +42,9 @@ namespace Nuke.Common.Execution
         internal List<Target> AfterTargets { get; } = new List<Target>();
         internal List<Target> TriggersTargets { get; } = new List<Target>();
         internal List<Target> TriggeredByTargets { get; } = new List<Target>();
+        internal int? PartitionSize { get; private set; }
+        internal List<string> ArtifactProducts { get; } = new List<string>();
+        internal LookupTable<Target, string[]> ArtifactDependencies { get; } = new LookupTable<Target, string[]>();
 
         ITargetDefinition ITargetDefinition.Description(string description)
         {
@@ -220,12 +222,9 @@ namespace Nuke.Common.Execution
 
         public ITargetDefinition Base()
         {
-            ControlFlow.Assert(_baseMembers.Count > 0,
-                new[]
-                {
-                    $"Target '{Target.DeclaringType}.{Target.Name}' does not have any base members.",
-                    "To inherit from a interface default implementation, use Inherit<T>."
-                }.JoinNewLine());
+            Assert.True(_baseMembers.Count > 0,
+                $"Target '{Target.DeclaringType}.{Target.Name}' does not have any base members,"
+                + $" to inherit from a interface default implementation, use {nameof(Inherit)}");
             Inherit(_baseMembers.Pop().GetValueNonVirtual<Target>(Build));
             return this;
         }
@@ -243,7 +242,47 @@ namespace Nuke.Common.Execution
             return this;
         }
 
-        private Target[] GetTargetsOrSingleOf<T>(Target[] targets)
+        public ITargetDefinition Produces(params string[] artifacts)
+        {
+            ArtifactProducts.AddRange(artifacts);
+            return this;
+        }
+
+        public ITargetDefinition Consumes(params Target[] targets)
+        {
+            targets.ForEach(x => Consumes(x));
+            return this;
+        }
+
+        public ITargetDefinition Consumes<T>(params Func<T, Target>[] targets)
+        {
+            return Consumes(GetTargetsOrSingleOf<T>(targets.Select(x => x((T) (object) Build)).ToArray()));
+        }
+
+        public ITargetDefinition Consumes(Target target, params string[] artifacts)
+        {
+            ArtifactDependencies.Add(target, artifacts);
+            return this;
+        }
+
+        public ITargetDefinition Consumes<T>(Func<T, Target> target, params string[] artifacts)
+        {
+            return Consumes(target.Invoke((T) (object) Build), artifacts);
+        }
+
+        public ITargetDefinition Consumes<T>(params string[] artifacts)
+        {
+            return Consumes(GetTargetsOrSingleOf<T>().Single(), artifacts);
+        }
+
+        public ITargetDefinition Partition(int size)
+        {
+            Assert.True(size > 1);
+            PartitionSize = size;
+            return this;
+        }
+
+        private Target[] GetTargetsOrSingleOf<T>(params Target[] targets)
         {
             return targets.Length > 0 ? targets : new[] { (Target) GetSingleTargetProperty<T>().GetValue(Build) };
         }
@@ -251,7 +290,7 @@ namespace Nuke.Common.Execution
         private PropertyInfo GetSingleTargetProperty<T>()
         {
             var interfaceTargets = typeof(T).GetProperties(ReflectionUtility.Instance).Where(x => x.PropertyType == typeof(Target)).ToList();
-            ControlFlow.Assert(interfaceTargets.Count == 1,
+            Assert.HasSingleItem(interfaceTargets,
                 new[]
                 {
                     $"Target '{Target.DeclaringType}.{Target.Name}' cannot have a shorthand dependency on component '{typeof(T).Name}'.",

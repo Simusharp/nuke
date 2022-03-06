@@ -1,4 +1,4 @@
-﻿// Copyright 2020 Maintainers of NUKE.
+﻿// Copyright 2021 Maintainers of NUKE.
 // Distributed under the MIT License.
 // https://github.com/nuke-build/nuke/blob/master/LICENSE
 
@@ -16,7 +16,7 @@ namespace Nuke.Common.ValueInjection
             IReadOnlyCollection<ExecutableTarget> executableTargets,
             IReadOnlyCollection<ExecutableTarget> executionPlan)
         {
-            ValueInjectionUtility.InjectValues(build, x => !(x is ParameterAttribute));
+            ValueInjectionUtility.InjectValues(build, x => x is not ParameterAttribute);
         }
     }
 }

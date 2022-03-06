@@ -1,4 +1,4 @@
-// Generated from https://github.com/nuke-build/nuke/blob/master/build/specifications/SonarScanner.json
+// Generated from https://github.com/nuke-build/nuke/blob/master/source/Nuke.Common/Tools/SonarScanner/SonarScanner.json
 
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -37,9 +37,9 @@ namespace Nuke.Common.Tools.SonarScanner
         ///   <p>The SonarScanner for MSBuild is the recommended way to launch a SonarQube or SonarCloud analysis for projects/solutions using MSBuild or dotnet command as build tool.</p>
         ///   <p>For more details, visit the <a href="https://www.sonarqube.org/">official website</a>.</p>
         /// </summary>
-        public static IReadOnlyCollection<Output> SonarScanner(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, bool? logTimestamp = null, string logFile = null, Func<string, string> outputFilter = null)
+        public static IReadOnlyCollection<Output> SonarScanner(string arguments, string workingDirectory = null, IReadOnlyDictionary<string, string> environmentVariables = null, int? timeout = null, bool? logOutput = null, bool? logInvocation = null, Func<string, string> outputFilter = null)
         {
-            using var process = ProcessTasks.StartProcess(SonarScannerPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, logTimestamp, logFile, SonarScannerLogger, outputFilter);
+            using var process = ProcessTasks.StartProcess(SonarScannerPath, arguments, workingDirectory, environmentVariables, timeout, logOutput, logInvocation, SonarScannerLogger, outputFilter);
             process.AssertZeroExitCode();
             return process.Output;
         }
@@ -80,6 +80,7 @@ namespace Nuke.Common.Tools.SonarScanner
         ///     <li><c>/d:sonar.ws.timeout</c> via <see cref="SonarScannerBeginSettings.WebServiceTimeout"/></li>
         ///     <li><c>/k</c> via <see cref="SonarScannerBeginSettings.ProjectKey"/></li>
         ///     <li><c>/n</c> via <see cref="SonarScannerBeginSettings.Name"/></li>
+        ///     <li><c>/o</c> via <see cref="SonarScannerBeginSettings.Organization"/></li>
         ///     <li><c>/v</c> via <see cref="SonarScannerBeginSettings.Version"/></li>
         ///   </ul>
         /// </remarks>
@@ -127,6 +128,7 @@ namespace Nuke.Common.Tools.SonarScanner
         ///     <li><c>/d:sonar.ws.timeout</c> via <see cref="SonarScannerBeginSettings.WebServiceTimeout"/></li>
         ///     <li><c>/k</c> via <see cref="SonarScannerBeginSettings.ProjectKey"/></li>
         ///     <li><c>/n</c> via <see cref="SonarScannerBeginSettings.Name"/></li>
+        ///     <li><c>/o</c> via <see cref="SonarScannerBeginSettings.Organization"/></li>
         ///     <li><c>/v</c> via <see cref="SonarScannerBeginSettings.Version"/></li>
         ///   </ul>
         /// </remarks>
@@ -171,6 +173,7 @@ namespace Nuke.Common.Tools.SonarScanner
         ///     <li><c>/d:sonar.ws.timeout</c> via <see cref="SonarScannerBeginSettings.WebServiceTimeout"/></li>
         ///     <li><c>/k</c> via <see cref="SonarScannerBeginSettings.ProjectKey"/></li>
         ///     <li><c>/n</c> via <see cref="SonarScannerBeginSettings.Name"/></li>
+        ///     <li><c>/o</c> via <see cref="SonarScannerBeginSettings.Organization"/></li>
         ///     <li><c>/v</c> via <see cref="SonarScannerBeginSettings.Version"/></li>
         ///   </ul>
         /// </remarks>
@@ -253,6 +256,10 @@ namespace Nuke.Common.Tools.SonarScanner
         ///   Specifies the version of your project.
         /// </summary>
         public virtual string Version { get; internal set; }
+        /// <summary>
+        ///   Specifies the Organization of your project.
+        /// </summary>
+        public virtual string Organization { get; internal set; }
         /// <summary>
         ///   The project description.
         /// </summary>
@@ -386,9 +393,10 @@ namespace Nuke.Common.Tools.SonarScanner
               .Add("/k:{value}", ProjectKey)
               .Add("/n:{value}", Name)
               .Add("/v:{value}", Version)
+              .Add("/o:{value}", Organization)
               .Add("/d:sonar.projectDescription={value}", Description)
               .Add("/d:sonar.host.url={value}", Server)
-              .Add("/d:sonar.login={value}", Login)
+              .Add("/d:sonar.login={value}", Login, secret: true)
               .Add("/d:sonar.password={value}", Password, secret: true)
               .Add("/d:sonar.verbose={value}", Verbose)
               .Add("/d:sonar.cs.vstest.reportsPaths={value}", VSTestReports, separator: ',')
@@ -445,7 +453,7 @@ namespace Nuke.Common.Tools.SonarScanner
         {
             arguments
               .Add("end")
-              .Add("/d:sonar.login={value}", Login)
+              .Add("/d:sonar.login={value}", Login, secret: true)
               .Add("/d:sonar.password={value}", Password, secret: true);
             return base.ConfigureProcessArguments(arguments);
         }
@@ -531,6 +539,30 @@ namespace Nuke.Common.Tools.SonarScanner
             return toolSettings;
         }
         #endregion
+        #region Organization
+        /// <summary>
+        ///   <p><em>Sets <see cref="SonarScannerBeginSettings.Organization"/></em></p>
+        ///   <p>Specifies the Organization of your project.</p>
+        /// </summary>
+        [Pure]
+        public static T SetOrganization<T>(this T toolSettings, string organization) where T : SonarScannerBeginSettings
+        {
+            toolSettings = toolSettings.NewInstance();
+            toolSettings.Organization = organization;
+            return toolSettings;
+        }
+        /// <summary>
+        ///   <p><em>Resets <see cref="SonarScannerBeginSettings.Organization"/></em></p>
+        ///   <p>Specifies the Organization of your project.</p>
+        /// </summary>
+        [Pure]
+        public static T ResetOrganization<T>(this T toolSettings) where T : SonarScannerBeginSettings
+        {
+            toolSettings = toolSettings.NewInstance();
+            toolSettings.Organization = null;
+            return toolSettings;
+        }
+        #endregion
         #region Description
         /// <summary>
         ///   <p><em>Sets <see cref="SonarScannerBeginSettings.Description"/></em></p>
@@ -585,7 +617,7 @@ namespace Nuke.Common.Tools.SonarScanner
         ///   <p>Specifies the username or access token to authenticate with to SonarQube. If this argument is added to the begin step, it must also be added on the end step.</p>
         /// </summary>
         [Pure]
-        public static T SetLogin<T>(this T toolSettings, string login) where T : SonarScannerBeginSettings
+        public static T SetLogin<T>(this T toolSettings, [Secret] string login) where T : SonarScannerBeginSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Login = login;
@@ -609,7 +641,7 @@ namespace Nuke.Common.Tools.SonarScanner
         ///   <p>Specifies the password for the SonarQube username in the <c>sonar.login</c> argument. This argument is not needed if you use authentication token. If this argument is added to the begin step, it must also be added on the end step.</p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : SonarScannerBeginSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : SonarScannerBeginSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;
@@ -2015,7 +2047,7 @@ namespace Nuke.Common.Tools.SonarScanner
         ///   <p>Specifies the username or access token to authenticate with to SonarQube. If this argument is added to the begin step, it must also be added on the end step.</p>
         /// </summary>
         [Pure]
-        public static T SetLogin<T>(this T toolSettings, string login) where T : SonarScannerEndSettings
+        public static T SetLogin<T>(this T toolSettings, [Secret] string login) where T : SonarScannerEndSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Login = login;
@@ -2039,7 +2071,7 @@ namespace Nuke.Common.Tools.SonarScanner
         ///   <p>Specifies the password for the SonarQube username in the <c>sonar.login</c> argument. This argument is not needed if you use authentication token. If this argument is added to the begin step, it must also be added on the end step.</p>
         /// </summary>
         [Pure]
-        public static T SetPassword<T>(this T toolSettings, string password) where T : SonarScannerEndSettings
+        public static T SetPassword<T>(this T toolSettings, [Secret] string password) where T : SonarScannerEndSettings
         {
             toolSettings = toolSettings.NewInstance();
             toolSettings.Password = password;

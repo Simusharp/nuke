@@ -9,10 +9,6 @@
         "AutoStash": {
           "type": "boolean"
         },
-        "AzurePipelinesAccessToken": {
-          "type": "string",
-          "default": "Secrets must be entered via 'nuke :secret [profile]'"
-        },
         "CodecovToken": {
           "type": "string",
           "default": "Secrets must be entered via 'nuke :secret [profile]'"
@@ -28,19 +24,20 @@
           "type": "boolean",
           "description": "Indicates to continue a previously failed build attempt"
         },
-        "EnterpriseAccessToken": {
-          "type": "string"
-        },
         "GitHubRegistryApiKey": {
-          "type": "string"
-        },
-        "GitHubToken": {
           "type": "string",
           "default": "Secrets must be entered via 'nuke :secret [profile]'"
         },
         "GitterAuthToken": {
           "type": "string",
           "default": "Secrets must be entered via 'nuke :secret [profile]'"
+        },
+        "GitterRoomId": {
+          "type": "string"
+        },
+        "GlobalSolution": {
+          "type": "string",
+          "description": "Path to a solution file that is automatically loaded. Default is nuke-global.sln"
         },
         "Help": {
           "type": "boolean",
@@ -57,26 +54,29 @@
             "GitHubActions",
             "GitLab",
             "Jenkins",
+            "Rider",
             "SpaceAutomation",
             "TeamCity",
             "Terminal",
-            "TravisCI"
+            "TravisCI",
+            "VisualStudio",
+            "VSCode"
           ]
         },
         "IgnoreFailedSources": {
           "type": "boolean",
           "description": "Ignore unreachable sources during Restore"
         },
+        "Major": {
+          "type": "boolean"
+        },
         "NoLogo": {
           "type": "boolean",
           "description": "Disables displaying the NUKE logo"
         },
-        "NuGetApiKey": {
+        "Partition": {
           "type": "string",
-          "default": "Secrets must be entered via 'nuke :secret [profile]'"
-        },
-        "NuGetSource": {
-          "type": "string"
+          "description": "Partition to use on CI"
         },
         "Plan": {
           "type": "boolean",
@@ -90,7 +90,8 @@
           }
         },
         "PublicNuGetApiKey": {
-          "type": "string"
+          "type": "string",
+          "default": "Secrets must be entered via 'nuke :secret [profile]'"
         },
         "Root": {
           "type": "string",
@@ -120,7 +121,7 @@
               "CheckoutExternalRepositories",
               "Clean",
               "Compile",
-              "DownloadFonts",
+              "DownloadLicenses",
               "GenerateGlobalSolution",
               "GeneratePublicApi",
               "GenerateTools",
@@ -142,14 +143,6 @@
               "UpdateContributors"
             ]
           }
-        },
-        "SlackAppAccessToken": {
-          "type": "string",
-          "default": "Secrets must be entered via 'nuke :secret [profile]'"
-        },
-        "SlackUserAccessToken": {
-          "type": "string",
-          "default": "Secrets must be entered via 'nuke :secret [profile]'"
         },
         "SlackWebhook": {
           "type": "string",
@@ -161,7 +154,7 @@
         },
         "Target": {
           "type": "array",
-          "description": "List of targets to be executed. Default is '{default_target}'",
+          "description": "List of targets to be invoked. Default is '{default_target}'",
           "items": {
             "type": "string",
             "enum": [
@@ -170,7 +163,7 @@
               "CheckoutExternalRepositories",
               "Clean",
               "Compile",
-              "DownloadFonts",
+              "DownloadLicenses",
               "GenerateGlobalSolution",
               "GeneratePublicApi",
               "GenerateTools",
@@ -192,9 +185,6 @@
               "UpdateContributors"
             ]
           }
-        },
-        "TestPartition": {
-          "type": "string"
         },
         "TwitterAccessToken": {
           "type": "string",

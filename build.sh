@@ -20,6 +20,7 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 export DOTNET_MULTILEVEL_LOOKUP=0
 export DOTNET_ROLL_FORWARD="Major"
+export NUKE_TELEMETRY_OPTOUT=1
 
 ###########################################################################
 # EXECUTION
@@ -30,7 +31,8 @@ function FirstJsonValue {
 }
 
 # Print environment variables
-env | sort
+# WARNING: Make sure that secrets are actually scrambled in build log
+# env | sort
 
 # Check if any dotnet is installed
 if [[ -x "$(command -v dotnet)" ]]; then
@@ -65,7 +67,7 @@ else
     export DOTNET_EXE="$DOTNET_DIRECTORY/dotnet"
 fi
 
-echo "Microsoft (R) .NET Core SDK version $("$DOTNET_EXE" --version)"
+echo "Microsoft (R) .NET SDK version $("$DOTNET_EXE" --version)"
 
 "$DOTNET_EXE" build "$BUILD_PROJECT_FILE" /nodeReuse:false /p:UseSharedCompilation=false -nologo -clp:NoSummary
 "$DOTNET_EXE" run --project "$BUILD_PROJECT_FILE" --no-build -- "$@"
